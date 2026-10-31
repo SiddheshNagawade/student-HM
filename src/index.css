@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { height: 100%; }
+body { margin: 0; background: #FFFBF3; color: #00224E; font-family: 'Hiragino Maru Gothic ProN', 'Rounded Mplus 1c', sans-serif; -webkit-tap-highlight-color: transparent; }
+h1, h2, h3, button { font-family: 'League Spartan', sans-serif; }
+button { cursor: pointer; }
+input, textarea { font-family: inherit; color: #00224E; }
+input::placeholder, textarea::placeholder { color: #3E4F72; opacity: .7; }
+/* hand-drawn wobble for meaningful objects (ticket, slip, sticky note, bubble) */
+.wobble { filter: url(#wobble); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }

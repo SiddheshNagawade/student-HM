@@ -3,7 +3,7 @@
    up    = sheet rises from the bottom (modal-ish steps)
    plane = paper plane flies across and the new screen is revealed in its wake (student)
    wave  = the blue field washes up over the screen and pulls back on the next one (technician)
-   swap  = instant cut with a small settle, for tabs */
+   swap  = quick crossfade, nothing moves, for tabs and desktop sections */
 import { ReactNode, createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion, Variants } from 'framer-motion'
 import { fx } from './fx'
@@ -57,13 +57,13 @@ const variants = {
     if (tr === 'up') return dir > 0 ? { y: '100%', x: 0, zIndex: 2 } : { y: 0, x: 0, scale: 0.96, zIndex: 1, filter: 'brightness(0.86)' }
     if (tr === 'plane') return { clipPath: 'inset(0% 100% 0% 0%)', zIndex: 2 }
     if (tr === 'wave') return { opacity: 0, zIndex: 2 }
-    return { y: 10, scale: 0.985, zIndex: 2 }
+    return { opacity: 0, zIndex: 2 }
   },
   center: ({ tr }: C) => {
     const base = { x: 0, y: 0, scale: 1, opacity: 1, filter: 'brightness(1)', zIndex: 2 }
     if (tr === 'plane') return { ...base, clipPath: 'inset(0% 0% 0% 0%)', transition: { duration: 0.62, ease: [0.65, 0, 0.35, 1] } }
     if (tr === 'wave') return { ...base, transition: { opacity: { duration: 0, delay: 0.26 } } }
-    if (tr === 'swap') return { ...base, transition: { type: 'spring', stiffness: 700, damping: 40 } }
+    if (tr === 'swap') return { ...base, transition: { duration: 0.14, ease: 'easeOut' } }
     return { ...base, transition: spring }
   },
   exit: ({ dir, tr, reduce }: C) => {

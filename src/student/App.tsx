@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Footprints, ShieldCheck, CalendarCheck2, PackageCheck, DoorClosed, KeyRound, Check } from 'lucide-react'
+import { Footprints, ShieldCheck, CalendarCheck2, PackageCheck, DoorClosed, KeyRound, Check } from '../ds/icons'
 import { useNav, Stage } from '../ds/nav'
 import { PhoneStage, ScreenGroup } from '../ds/stage'
 import { ToastHost, ToastOutlet, useToast } from '../ds/ui'

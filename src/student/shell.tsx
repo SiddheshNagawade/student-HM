@@ -1,6 +1,6 @@
 import { ReactNode, createContext, useContext, useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Home, ClipboardList, Bell, UserRound, FlaskConical, X } from 'lucide-react'
+import { ArrowLeft, Home, ClipboardList, Bell, UserRound, FlaskConical, X } from '../ds/icons'
 import { IconButton, Sheet, cx, useToast, ToastOpts, Button } from '../ds/ui'
 import { NavApi } from '../ds/nav'
 import { StatusBar, useFramed } from '../ds/stage'
@@ -102,7 +102,7 @@ export function DemoDock({ bottom = 112 }: { bottom?: number }) {
   if (!demo.length || framed) return null
   return (
     <>
-      <motion.div className="absolute right-4 z-30" style={{ bottom }} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={spring}>
+      <motion.div className="absolute right-4 z-30" style={{ bottom }}>
         <motion.span className="absolute inset-0 rounded-full bg-royal/30" animate={{ scale: [1, 1.5], opacity: [0.7, 0] }} transition={{ duration: 1.6, repeat: Infinity }} />
         <IconButton label="Demo: simulate what happens next" side="left" variant="dark" size={48} onClick={() => setOpen(true)} className="!bg-royal"><FlaskConical size={22} /></IconButton>
       </motion.div>

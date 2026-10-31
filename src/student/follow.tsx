@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Phone, Clock3, DoorOpen, PackageSearch, RotateCcw, Star as StarIcon, MessageSquareWarning, Camera, Wrench, UserX, Check, Truck, ShieldCheck, LifeBuoy } from 'lucide-react'
+import { Phone, Clock3, DoorOpen, PackageSearch, RotateCcw, Star as StarIcon, MessageSquareWarning, Camera, Wrench, UserX, Check, Truck, ShieldCheck, LifeBuoy } from '../ds/icons'
 import { Art, Avatar, Beaver, Button, Card, Chip, Choice, LinkButton, Sheet, Stars, Tag, TextArea, Timeline, TimelineItem, Toggle, cx, Divider, EmptyState } from '../ds/ui'
-import { Drop, Rise, Words, Roll, Pop, Stamp, Shake, spring, springPop } from '../ds/motion'
+import { Drop, Rise, Words, Roll, Pop, Stamp, Shake, ArtIn, spring, springPop } from '../ds/motion'
 import { fx } from '../ds/fx'
 import { ago, clock, dayTime, nextDays, SLOT_TIMES, addMin } from '../data/iitr'
 import { Screen, TopBar, Title, useApp } from './shell'
@@ -121,7 +121,7 @@ export function Code() {
           <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-mid">Closing code · #{r.id}</div>
           <div className="mt-4 flex justify-between gap-2">
             {r.code.split('').map((c, i) => (
-              <motion.span key={i} initial={{ rotateX: 90 }} animate={{ rotateX: 0 }} transition={{ ...springPop, delay: 0.45 + i * 0.09 }}
+              <motion.span key={i}
                 className="flex h-[78px] flex-1 items-center justify-center rounded-[14px] bg-navy font-mono text-[44px] font-medium text-cream">{c}</motion.span>
             ))}
           </div>
@@ -157,7 +157,7 @@ export function Part() {
   if (!r) return <NotFound />
   return (
     <Screen top={<TopBar title="Waiting for a part" sub={`#${r.id} · ${r.spot}`} />}>
-      <Drop className="-mx-6 mt-2"><Art n="route" className="w-full" /></Drop>
+      <ArtIn className="-mx-6 mt-2"><Art n="route" className="w-full" /></ArtIn>
       <Title sub="We will book your visit the moment it reaches the IWD store. You do not need to do anything.">The part is on its way</Title>
       <Card variant="outline" className="mt-5 flex items-center gap-3 p-4">
         <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-sun2"><PackageSearch size={22} /></span>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { AtSign, BellRing, ChevronDown, Footprints, KeyRound, Mail, MapPin, Search, ShieldCheck, Sparkles, Wrench, Check } from 'lucide-react'
+import { AtSign, BellRing, ChevronDown, Footprints, KeyRound, Mail, MapPin, Search, ShieldCheck, Sparkles, Wrench, Check } from '../ds/icons'
 import { Art, Beaver, Button, Card, Chip, LinkButton, Sheet, TextField, OtpInput, cx, Tag } from '../ds/ui'
 import { Drop, Rise, Words, Roll, spring, springPop } from '../ds/motion'
 import { fx } from '../ds/fx'

@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Plus, ChevronRight, Clock3, Users, Footprints, Wrench, PackageSearch, CalendarX2, BellOff, CheckCheck, Home as HomeIcon, CalendarClock, Bell, Volume2, ShieldCheck, Phone, LogOut, Info, Inbox as InboxIcon, Zap, Droplets, Hammer, BrickWall } from 'lucide-react'
+import { Plus, ChevronRight, Clock3, Users, Footprints, Wrench, PackageSearch, CalendarX2, BellOff, CheckCheck, Home as HomeIcon, CalendarClock, Bell, Volume2, ShieldCheck, Phone, LogOut, Info, Inbox as InboxIcon, Zap, Droplets, Hammer, BrickWall } from '../ds/icons'
 import { Art, Avatar, Beaver, Button, Card, EmptyState, ListRow, SectionLabel, Segmented, Steps, Tag, TagTone, Toggle, Tooltip, cx, Sheet } from '../ds/ui'
 import { Rise, Drop, Words, Roll, spring, springPop } from '../ds/motion'
 import { fx, useMuted, setMuted } from '../ds/fx'
@@ -26,7 +26,7 @@ export function Tabs() {
       <StatusBar />
       <div className="relative min-h-0 flex-1">
         <AnimatePresence initial={false} mode="popLayout">
-          <motion.div key={tab} className="absolute inset-0 overflow-y-auto no-scrollbar" initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.06 } }} transition={{ y: spring, opacity: { duration: 0.1 } }}>
+          <motion.div key={tab} className="absolute inset-0 overflow-y-auto no-scrollbar" initial={false} exit={{ opacity: 0, transition: { duration: 0 } }}>
             {body}
           </motion.div>
         </AnimatePresence>

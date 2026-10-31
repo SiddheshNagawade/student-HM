@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Camera, X, AlertTriangle, ShieldAlert, ShieldCheck, Pencil, Users, Clock3, DoorOpen, Send, CloudOff, Zap, Droplets, Hammer, BrickWall, Sparkles, Check, MapPin, CalendarDays } from 'lucide-react'
+import { Camera, X, AlertTriangle, ShieldAlert, ShieldCheck, Pencil, Users, Clock3, DoorOpen, Send, CloudOff, Zap, Droplets, Hammer, BrickWall, Sparkles, Check, MapPin, CalendarDays } from '../ds/icons'
 import { Art, Beaver, Button, Card, Chip, Choice, LinkButton, Tag, TextArea, TextField, Toggle, cx, Divider } from '../ds/ui'
-import { Drop, Rise, Words, Pop, spring, springPop } from '../ds/motion'
+import { Drop, Rise, Words, Pop, ArtIn, spring, springPop } from '../ds/motion'
 import { fx } from '../ds/fx'
 import { ITEMS, PLACES, SLOT_TIMES, Trade, nextDays, addMin, TECHS } from '../data/iitr'
 import { Screen, TopBar, Title, useApp } from './shell'
@@ -27,7 +27,7 @@ export function What() {
         {TRADES.map(x => <Chip key={x.t} on={trade === x.t} onClick={() => setTrade(x.t)}>{x.t}</Chip>)}
       </div>
       <AnimatePresence mode="popLayout" initial={false}>
-        <motion.div key={trade} className="mt-5 grid grid-cols-2 gap-3 pb-6" initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -40, opacity: 0, transition: { duration: 0.1 } }} transition={spring}>
+        <motion.div key={trade} className="mt-5 grid grid-cols-2 gap-3 pb-6" initial={false} exit={{ opacity: 0, transition: { duration: 0 } }}>
           {ITEMS[trade].map(it => (
             <Choice key={it.id} on={d.item === it.id} title={it.label} art={<ItemArt art={it.art} trade={trade} />}
               onClick={() => { store.set({ draft: { ...d, trade, item: it.id, itemLabel: it.label, issue: undefined } }); setTimeout(() => nav.go('issue'), 180) }} />
@@ -70,7 +70,7 @@ export function Issue() {
               <button aria-label="Remove photo" onClick={() => { fx.deselect(); store.set({ draft: { ...d, photo: false } }) }} className="absolute -right-3 -top-3 flex h-8 w-8 items-center justify-center rounded-full border-2 border-navy bg-paper"><X size={16} /></button>
             </motion.div>
           ) : (
-            <motion.button key="b" onClick={takePhoto} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} whileTap={{ scale: 0.97 }}
+            <motion.button key="b" onClick={takePhoto} whileTap={{ scale: 0.97 }}
               className="flex h-[72px] w-full items-center gap-3 rounded-[16px] border-2 border-dashed border-navy/40 bg-paper px-4 text-left hover:border-navy">
               <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-sky2"><Camera size={22} /></span>
               <span><span className="block text-[16px] font-semibold">Take a photo</span><span className="text-[13px] text-mid">Optional</span></span>
@@ -89,7 +89,7 @@ export function Safety() {
   const yes = d.urgent === true, no = d.urgent === false
   return (
     <Screen bg="bg-sand" top={<TopBar title="Quick safety check" step={[1, STEPS]} />} footer={<Button disabled={!yes && !no} variant={yes ? 'danger' : 'primary'} onClick={() => nav.go('place')}>{yes ? 'Report as dangerous' : 'Next'}</Button>}>
-      <Drop className="mt-2 flex justify-center"><Art n="socket" w={190} /></Drop>
+      <ArtIn className="mt-2 flex justify-center"><Art n="socket" w={190} /></ArtIn>
       <Title className="mt-4" sub="Be honest. It only changes how fast we come.">Sparks, a burning smell, or water near a socket?</Title>
       <div className="mt-5 flex flex-col gap-2.5">
         <Choice layout="row" on={no} title="No, it is safe" sub="Normal priority" icon={<ShieldCheck size={22} className="text-green" />} onClick={() => store.set({ draft: { ...d, urgent: false } })} />
@@ -269,7 +269,7 @@ export function Sent() {
       <div className="flex flex-col items-center pt-[72px] text-center">
         <Beaver pose="cele" size={150} bob />
         <Words text={joined ? 'You joined it.' : 'Report sent.'} className="mt-3 font-head text-[38px] font-extrabold" delay={0.5} />
-        <Pop delay={0.7}><span className="mt-3 inline-flex h-9 items-center rounded-full border-2 border-navy bg-paper px-4 font-mono text-[16px]">#{id}</span></Pop>
+        <div><span className="mt-3 inline-flex h-9 items-center rounded-full border-2 border-navy bg-paper px-4 font-mono text-[16px]">#{id}</span></div>
       </div>
       <div className="mt-7 flex flex-col gap-2.5">
         {steps.map(([a, b], i) => (

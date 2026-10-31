@@ -3,7 +3,7 @@
    reviewer can jump anywhere without clicking through the whole flow). */
 import { ReactNode, createContext, useContext, useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Volume2, VolumeX, RotateCcw, MapPin, FlaskConical } from 'lucide-react'
+import { Volume2, VolumeX, RotateCcw, MapPin, FlaskConical } from './icons'
 import { setMuted, useMuted, fx } from './fx'
 import { cx, Tooltip } from './ui'
 

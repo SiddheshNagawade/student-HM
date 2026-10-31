@@ -2,7 +2,7 @@
    3px shadow), playful second (illustrations, springy motion, sounds). Shared by all three apps. */
 import { ReactNode, ButtonHTMLAttributes, InputHTMLAttributes, TextareaHTMLAttributes, createContext, useCallback, useContext, useEffect, useId, useRef, useState, forwardRef, CSSProperties } from 'react'
 import { AnimatePresence, motion, useReducedMotion, PanInfo } from 'framer-motion'
-import { Check, ChevronRight, Delete, Loader2, Star, X, AlertCircle } from 'lucide-react'
+import { Check, ChevronRight, Delete, Loader2, Star, X, AlertCircle } from './icons'
 import { fx, FxName } from './fx'
 import { spring, springPop, Shake } from './motion'
 
@@ -423,7 +423,7 @@ export function Dialog({ open, onClose, children, title, width = 480, footer }: 
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
           <motion.div className="absolute inset-0 bg-navy/55" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
           <motion.div role="dialog" aria-modal className="relative max-h-full overflow-y-auto rounded-[24px] border-2 border-navy bg-cream p-7 shadow-[0_6px_0_#00224E]" style={{ width }}
-            initial={{ y: 30, scale: 0.94, rotate: -1 }} animate={{ y: 0, scale: 1, rotate: 0 }} exit={{ y: 20, scale: 0.96, opacity: 0, transition: { duration: 0.12 } }} transition={springPop}>
+            initial={{ y: 10, scale: 0.98, opacity: 0 }} animate={{ y: 0, scale: 1, opacity: 1 }} exit={{ y: 6, opacity: 0, transition: { duration: 0.1 } }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}>
             <div className="mb-3 flex items-start justify-between gap-4">
               {title && <h2 className="font-head text-h2 font-extrabold leading-tight">{title}</h2>}
               <IconButton label="Close" variant="ghost" size={36} onClick={onClose}><X size={20} /></IconButton>

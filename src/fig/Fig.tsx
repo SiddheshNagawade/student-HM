@@ -96,6 +96,23 @@ function KitButton({ n, p, b }: { n: FNode; p: { x: number; y: number }; b?: Bin
     </button>
   )
 }
+function KitBigButton({ n, p, b }: { n: FNode; p: { x: number; y: number }; b?: Bind }) {
+  const [down, setDown] = useState(false)
+  const [hi, en] = Array.isArray(b?.text) ? (b!.text as unknown as [ReactNode, ReactNode]) : [n.txt?.[0], n.txt?.[1]]
+  return (
+    <button type="button" disabled={b?.disabled} aria-label={typeof en === 'string' ? en : undefined}
+      onPointerDown={() => setDown(true)} onPointerUp={() => setDown(false)} onPointerLeave={() => setDown(false)}
+      onClick={() => { fx.tap(); b?.onClick?.() }}
+      style={{ ...box(n, p), border: '2.5px solid #00224E', borderRadius: 28, background: down ? '#0680DC' : '#0794FF', boxShadow: `0 ${down ? 1 : 6}px 0 #00224E`, transform: `translateY(${down ? 5 : 0}px)`,
+        transition: 'transform 60ms, box-shadow 60ms', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '0 24px', textAlign: 'left', cursor: 'pointer', opacity: b?.disabled ? 0.5 : 1, ...b?.style }}>
+      <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <span style={{ fontFamily: '"Baloo 2", "Noto Sans Devanagari", sans-serif', fontWeight: 800, fontSize: 36, lineHeight: '40px', color: '#00224E', whiteSpace: 'nowrap' }}>{hi}</span>
+        <span style={{ fontFamily: '"M PLUS Rounded 1c", sans-serif', fontSize: 14.5, lineHeight: '20px', color: '#00224E' }}>{en}</span>
+      </span>
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M4 14H24M16 22L24 14L16 6" stroke="#00224E" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    </button>
+  )
+}
 function KitInput({ n, p, b }: { n: FNode; p: { x: number; y: number }; b?: Bind }) {
   const [focus, setFocus] = useState(false)
   const inp = b?.input
@@ -151,7 +168,8 @@ function Layer({ n, p }: { n: FNode; p: { x: number; y: number } }) {
   let el: ReactNode
   if (n.t === 'INS') {
     const mc = n.mc || ''
-    if (mc.startsWith('Button')) el = <KitButton n={n} p={q} b={b} />
+    if (mc.startsWith('BigButton')) el = <KitBigButton n={n} p={q} b={b} />
+    else if (mc.startsWith('Button')) el = <KitButton n={n} p={q} b={b} />
     else if (mc.startsWith('Input')) el = <KitInput n={n} p={q} b={b} />
     else if (mc.startsWith('Cell')) el = <KitCell n={n} p={q} b={b} />
     else if (mc === 'Back') el = <KitIcon n={n} p={q} b={b} file="kit-217:72" label="Back" />

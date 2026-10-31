@@ -31,3 +31,12 @@ input::placeholder, textarea::placeholder { color: #3E4F72; opacity: 1; }
 .fig-root button, .fig-root input, .fig-root textarea, .fig-root label, .fig-root a { pointer-events: auto; }
 .fig-root button * { pointer-events: none; }
 .fig-root button input, .fig-root label input, .fig-root label textarea { pointer-events: auto; }
+/* Figma fan blades: spin up and wind down once */
+@keyframes figspin { from { transform: rotate(0deg); } to { transform: rotate(540deg); } }
+.fig-spin { transform-box: view-box; animation: figspin 2.4s cubic-bezier(.15,.6,.35,1) .25s 1 both; }
+@media (prefers-reduced-motion: reduce) { .fig-spin { animation: none; } }
+/* Supervisor desk: dialog appears once, bars grow once */
+@keyframes figmodal { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes figfade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes figbar { from { transform: scaleX(0); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .fig-root * { animation: none !important; } }

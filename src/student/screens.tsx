@@ -6,6 +6,7 @@ import { SpinDown, PlaneFlight, PLANE_VERIFY, PLANE_SENT, Settle, Hop, WalkIn, R
 import { NavApi } from '../ds/nav'
 import { fx } from '../ds/fx'
 import DATA from './fig.json'
+import { Hanging, peek } from '../fig/mascot'
 import { TimeWheel, Sun, SLOT_START, slotShort, slotRange, goneToday } from './wheel'
 import { store, State, roomCode, nameFrom, IITR, initial, firstName, emptyDraft, code4, active, pushAlert, setReq, ago, stamp, Req } from './store'
 
@@ -20,6 +21,10 @@ const useS = () => store.use(s => s)
 const back = (nav: NavApi<Screen>) => ({ onClick: () => nav.back(), label: 'Back' })
 /** Swing a group of loose layers as one notice board hung on a pin at (px, py). */
 const swingAll = (ids: string[], scr: FNode, px: number, py: number): Binds => Object.fromEntries(ids.map(i => { const n = scr.k!.find(k => k.i === i)!; return [i, { style: { animation: 'figswing 1.9s cubic-bezier(.3,.6,.4,1) .15s both', transformOrigin: `${px - n.x}px ${py - n.y}px` } }] }))
+/* The beaver drawings from the Figma, by mood. */
+export const BEAVER = { wave: '227:313', cheer: '226:570', thumbs: '229:79', think: '226:910', point: '227:368' } as const
+const HANG = { art: '226:570', sign: 'sign-board', cx: 195, top: 30, scale: 1.2 }
+const hide2 = (...ids: string[]): Binds => Object.fromEntries(ids.map(i => [i, { hide: true }]))
 const abs = (x: number, y: number, w: number, h: number): React.CSSProperties => ({ position: 'absolute', left: x, top: y, width: w, height: h })
 
 /* ---------- things that can break, and what they do ---------- */
@@ -149,7 +154,7 @@ export function Hours() {
 
 export function Allow() {
   const nav = useNav()
-  const done = (on: boolean) => { store.set({ alertsOn: on, signedIn: true }); nav.reset('homeEmpty') }
+  const done = (on: boolean) => { store.set({ alertsOn: on, signedIn: true }); nav.reset('homeEmpty'); setTimeout(() => peek({ mood: 'wave', say: `Hi ${firstName(store.get().name) || 'there'}!`, sub: on ? 'I will ping you when someone is coming.' : undefined, ms: 3200 }), 500) }
   return (
     <F id="227:298" binds={{
       '227:299': back(nav), '227:313': { wrap: el => <Settle>{el}</Settle> },
@@ -207,6 +212,7 @@ export function Home() {
   // the first time the room is shown, each tappable thing glows once in turn
   const [hint] = useState(() => { const seen = sessionStorage.getItem('align.hint.room'); sessionStorage.setItem('align.hint.room', '1'); return !seen })
   const [hit, setHit] = useState('')
+  useEffect(() => { if (!hint) return; const t = setTimeout(() => peek({ mood: 'point', side: 'right', say: 'Tap whatever broke.', ms: 3200 }), 2700); return () => clearTimeout(t) }, [])
   const tap = (k: string) => { setHit(k); setTimeout(() => start(k), 170) }
   const extra = <>{SPOTS.map(([k, x, y, w, h], i) => <button key={k} aria-label={`Report the ${THINGS[k].item.toLowerCase()}`} title={THINGS[k].item} onClick={() => tap(k)}
     className={'fig-spot' + (hint ? ' fig-hint' : '')} style={{ ...abs(x, y, w, h), animationDelay: hint ? `${0.6 + i * 0.22}s` : undefined, ...(hit === k ? { background: 'radial-gradient(closest-side, rgba(255,210,101,.85), rgba(255,210,101,0))', transform: 'scale(1.06)' } : {}) }} />)}</>
@@ -436,7 +442,7 @@ const TAGS: [string, string, string][] = [['229:106', '229:110', 'On time'], ['2
 export function Rate() {
   const nav = useNav(); const r = useReq(); const s = useS()
   const [stars, setStars] = useState(r.stars || 0); const [tags, setTags] = useState<string[]>(r.tags || []); const [note, setNote] = useState('')
-  const done = (save: boolean) => { if (save) setReq(r.id, { stars, tags, note }); fx.success(); nav.replace('closed', { p: { id: r.id } }) }
+  const done = (save: boolean) => { if (save) setReq(r.id, { stars, tags, note }); fx.success(); if (save) peek({ mood: 'thumbs', say: 'Thank you!', sub: `${firstName(r.tech)} will see your stars.` }); nav.replace('closed', { p: { id: r.id } }) }
   const binds: Binds = {
     '229:79': { wrap: el => <Settle>{el}</Settle> }, '229:85': { text: `${r.tech} · ${r.item.toLowerCase()} · ${roomCode(s)}` },
     '229:143': { render: () => <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Anything we should know?" aria-label="Say more" style={{ width: '100%', height: '100%', border: '2px solid #00224E', borderRadius: 16, background: '#FFFFFF', padding: '12px 16px', fontFamily: '"M PLUS Rounded 1c", sans-serif', fontSize: 15, lineHeight: '22px', color: '#00224E', resize: 'none', outline: 'none' }} /> },
@@ -499,7 +505,7 @@ export function Missed() {
     '226:1122': { text: `${Math.max(1, r.missed)} of 2` },
     '226:1142': { onClick: () => setLetIn(!letIn), label: 'Let them in if I am out', render: () => <SvgMod id="226:1142" mod={svg => toggleSvg(svg, letIn, 'M276 38')} /> },
     '226:1149': { text: `The warden opens ${roomCode(s)}` },
-    '226:1158': { onClick: () => { setReq(r.id, { day: opts[pick][0], slot: slotRange(optSlot[pick]), letIn, stage: 2 }); fx.success(); nav.replace('detail', { p: { id: r.id } }) } },
+    '226:1158': { onClick: () => { setReq(r.id, { day: opts[pick][0], slot: slotRange(optSlot[pick]), letIn, stage: 2 }); fx.success(); peek({ mood: 'point', say: 'Booked!', sub: letIn ? 'The warden will open the door.' : `${opts[pick][0]}, ${opts[pick][1]}` }); nav.replace('detail', { p: { id: r.id } }) } },
   }
   slotA.forEach((id, i) => {
     binds[id] = { onClick: () => { fx.tick(i); setPick(i) }, label: `${opts[i][0]} ${opts[i][1]}`, render: () => <img src={figArt(i === pick ? '226:1124' : '226:1130')} width={112} height={95} alt="" /> }
@@ -515,7 +521,7 @@ export function WhatsWrong() {
   const send = () => {
     setReq(r.id, { stage: 1, reopened: true, closedAt: undefined })
     pushAlert({ title: 'Sent to the supervisor', sub: `${r.item} · ${opts[pick][2].toLowerCase()}`, reqId: r.id, kind: 'checked' })
-    fx.success(); nav.reset('home')
+    fx.success(); peek({ mood: 'think', say: 'The supervisor has it.', sub: 'You will hear back today.' }); nav.reset('home')
   }
   const binds: Binds = {
     '226:1238': back(nav), '226:1213': { text: pick === 2 ? 'Nobody came in your slot.' : pick === 1 ? 'It works, but the fix is poor or unsafe.' : `The ${r.item.toLowerCase()} does not work or still makes noise.` },
@@ -569,10 +575,10 @@ export function Profile() {
 
 export function ErrorScreen({ kind }: { kind: 'offline' | 'e500' | 'expired' | 'e404' }) {
   const nav = useNav()
-  if (kind === 'offline') return <F id="227:328" binds={{ '227:338': { wrap: el => <Settle>{el}</Settle> }, '227:341': { onClick: () => { store.set({ online: true }); nav.back() } }, '227:343': { onClick: () => nav.reset('home') } }} />
-  if (kind === 'e500') return <F id="227:344" binds={{ '227:353': { wrap: el => <Settle>{el}</Settle> }, '227:356': { onClick: () => nav.back() }, '227:358': { onClick: () => { location.href = 'tel:+911332285311' } } }} />
-  if (kind === 'expired') return <F id="227:359" binds={{ '227:368': { wrap: el => <Settle>{el}</Settle> }, '227:371': { onClick: () => { store.set({ signedIn: false }); nav.reset('signin') } } }} />
-  return <F id="227:373" binds={{ '227:382': { wrap: el => <Settle>{el}</Settle> }, '227:385': { onClick: () => nav.reset('home') } }} />
+  if (kind === 'offline') return <F id="227:328" binds={{ ...hide2('227:338', '227:339'), '227:341': { onClick: () => { store.set({ online: true }); nav.back() } }, '227:343': { onClick: () => nav.reset('home') } }} extra={<Hanging {...HANG} title="No connection" sub="Reconnect to get the latest updates." />} />
+  if (kind === 'e500') return <F id="227:344" binds={{ ...hide2('227:353', '227:354'), '227:356': { onClick: () => nav.back() }, '227:358': { onClick: () => { location.href = 'tel:+911332285311' } } }} extra={<Hanging {...HANG} title="That was on us." sub="Nothing you reported is lost." />} />
+  if (kind === 'expired') return <F id="227:359" binds={{ ...hide2('227:368', '227:369'), '227:371': { onClick: () => { store.set({ signedIn: false }); nav.reset('signin') } } }} extra={<Hanging {...HANG} title="Please sign in again." />} />
+  return <F id="227:373" binds={{ ...hide2('227:382', '227:383'), '227:385': { onClick: () => nav.reset('home') } }} extra={<Hanging {...HANG} title="We cannot find that." />} />
 }
 
 export const ALL: Record<Screen, () => React.ReactElement> = {

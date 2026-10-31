@@ -1,0 +1,670 @@
+{
+ "217:36": {
+  "n": "kind=student, state=default",
+  "t": "COM",
+  "w": 342,
+  "h": 56,
+  "f": "#FFD265",
+  "s": "#00224E/2.5",
+  "r": 28,
+  "e": "0,5,0,#00224E",
+  "al": "H gap10 p0,24,0,24 CENTER/CENTER",
+  "k": [
+   {
+    "n": "label",
+    "t": "TEX",
+    "w": 98,
+    "h": 22,
+    "f": "#00224E",
+    "c": "Button label",
+    "fn": "League Spartan ExtraBold",
+    "fs": 18,
+    "lh": 22
+   }
+  ]
+ },
+ "217:38": {
+  "n": "kind=student, state=pressed",
+  "t": "COM",
+  "w": 342,
+  "h": 56,
+  "f": "#F2BD3D",
+  "s": "#00224E/2.5",
+  "r": 28,
+  "e": "0,1,0,#00224E",
+  "al": "H gap10 p0,24,0,24 CENTER/CENTER",
+  "k": [
+   {
+    "n": "label",
+    "t": "TEX",
+    "w": 98,
+    "h": 22,
+    "f": "#00224E",
+    "c": "Button label",
+    "fn": "League Spartan ExtraBold",
+    "fs": 18,
+    "lh": 22
+   }
+  ]
+ },
+ "217:40": {
+  "n": "kind=tech, state=default",
+  "t": "COM",
+  "w": 342,
+  "h": 56,
+  "f": "#0794FF",
+  "s": "#00224E/2.5",
+  "r": 28,
+  "e": "0,5,0,#00224E",
+  "al": "H gap10 p0,24,0,24 CENTER/CENTER",
+  "k": [
+   {
+    "n": "label",
+    "t": "TEX",
+    "w": 98,
+    "h": 22,
+    "f": "#00224E",
+    "c": "Button label",
+    "fn": "League Spartan ExtraBold",
+    "fs": 18,
+    "lh": 22
+   }
+  ]
+ },
+ "217:44": {
+  "n": "kind=secondary, state=default",
+  "t": "COM",
+  "w": 342,
+  "h": 56,
+  "f": "#FFFBF3",
+  "s": "#00224E/2.5",
+  "r": 28,
+  "e": "0,5,0,#00224E",
+  "al": "H gap10 p0,24,0,24 CENTER/CENTER",
+  "k": [
+   {
+    "n": "label",
+    "t": "TEX",
+    "w": 98,
+    "h": 22,
+    "f": "#00224E",
+    "c": "Button label",
+    "fn": "League Spartan ExtraBold",
+    "fs": 18,
+    "lh": 22
+   }
+  ]
+ },
+ "217:48": {
+  "n": "kind=dark, state=default",
+  "t": "COM",
+  "w": 342,
+  "h": 56,
+  "f": "#00224E",
+  "s": "#00224E/2.5",
+  "r": 28,
+  "e": "0,5,0,#00224E",
+  "al": "H gap10 p0,24,0,24 CENTER/CENTER",
+  "k": [
+   {
+    "n": "label",
+    "t": "TEX",
+    "w": 98,
+    "h": 22,
+    "f": "#FFFBF3",
+    "c": "Button label",
+    "fn": "League Spartan ExtraBold",
+    "fs": 18,
+    "lh": 22
+   }
+  ]
+ },
+ "217:52": {
+  "n": "kind=danger, state=default",
+  "t": "COM",
+  "w": 342,
+  "h": 56,
+  "f": "#B8530A",
+  "s": "#00224E/2.5",
+  "r": 28,
+  "e": "0,5,0,#00224E",
+  "al": "H gap10 p0,24,0,24 CENTER/CENTER",
+  "k": [
+   {
+    "n": "label",
+    "t": "TEX",
+    "w": 98,
+    "h": 22,
+    "f": "#FFFBF3",
+    "c": "Button label",
+    "fn": "League Spartan ExtraBold",
+    "fs": 18,
+    "lh": 22
+   }
+  ]
+ },
+ "217:58": {
+  "n": "state=default",
+  "t": "COM",
+  "w": 354,
+  "h": 100,
+  "f": "#0794FF",
+  "s": "#00224E/2.5",
+  "r": 28,
+  "e": "0,6,0,#00224E",
+  "al": "H gap12 p0,24,0,24 SPACE_BETWEEN/CENTER",
+  "k": [
+   {
+    "n": "texts",
+    "t": "FRA",
+    "w": 108,
+    "h": 62,
+    "al": "V gap2 p0,0,0,0 MIN/MIN",
+    "k": [
+     {
+      "n": "label",
+      "t": "TEX",
+      "w": 108,
+      "h": 40,
+      "f": "#00224E",
+      "c": "\u0936\u0941\u0930\u0942 \u0915\u0930\u0947\u0902",
+      "fn": "Baloo 2 ExtraBold",
+      "fs": 36,
+      "lh": 40
+     },
+     {
+      "n": "sub",
+      "t": "TEX",
+      "w": 96,
+      "h": 20,
+      "f": "#00224E",
+      "c": "Start next job",
+      "fn": "Rounded Mplus 1c Regular",
+      "fs": 14.5,
+      "lh": 20
+     }
+    ]
+   },
+   {
+    "n": "icon",
+    "t": "FRA",
+    "w": 28,
+    "h": 28,
+    "k": [
+     {
+      "n": "Vector",
+      "t": "VEC",
+      "w": 20,
+      "h": 16,
+      "s": "#00224E/3.200000047683716"
+     }
+    ]
+   }
+  ]
+ },
+ "217:64": {
+  "n": "state=pressed",
+  "t": "COM",
+  "w": 354,
+  "h": 100,
+  "f": "#0680DC",
+  "s": "#00224E/2.5",
+  "r": 28,
+  "e": "0,1,0,#00224E",
+  "al": "H gap12 p0,24,0,24 SPACE_BETWEEN/CENTER",
+  "k": [
+   {
+    "n": "texts",
+    "t": "FRA",
+    "w": 108,
+    "h": 62,
+    "al": "V gap2 p0,0,0,0 MIN/MIN",
+    "k": [
+     {
+      "n": "label",
+      "t": "TEX",
+      "w": 108,
+      "h": 40,
+      "f": "#00224E",
+      "c": "\u0936\u0941\u0930\u0942 \u0915\u0930\u0947\u0902",
+      "fn": "Baloo 2 ExtraBold",
+      "fs": 36,
+      "lh": 40
+     },
+     {
+      "n": "sub",
+      "t": "TEX",
+      "w": 96,
+      "h": 20,
+      "f": "#00224E",
+      "c": "Start next job",
+      "fn": "Rounded Mplus 1c Regular",
+      "fs": 14.5,
+      "lh": 20
+     }
+    ]
+   },
+   {
+    "n": "icon",
+    "t": "FRA",
+    "w": 28,
+    "h": 28,
+    "k": [
+     {
+      "n": "Vector",
+      "t": "VEC",
+      "w": 20,
+      "h": 16,
+      "s": "#00224E/3.200000047683716"
+     }
+    ]
+   }
+  ]
+ },
+ "217:72": {
+  "n": "Back",
+  "t": "COM",
+  "w": 44,
+  "h": 44,
+  "f": "#FFFBF3",
+  "s": "#00224E/2.5",
+  "r": 22,
+  "k": [
+   {
+    "n": "icon",
+    "t": "FRA",
+    "w": 22,
+    "h": 22,
+    "k": [
+     {
+      "n": "Vector",
+      "t": "VEC",
+      "w": 16,
+      "h": 14,
+      "s": "#00224E/2.5999999046325684"
+     }
+    ]
+   }
+  ]
+ },
+ "217:76": {
+  "n": "Speaker",
+  "t": "COM",
+  "w": 52,
+  "h": 52,
+  "f": "#FFFBF3",
+  "s": "#00224E/2.5",
+  "r": 26,
+  "k": [
+   {
+    "n": "icon",
+    "t": "FRA",
+    "w": 26,
+    "h": 26,
+    "k": [
+     {
+      "n": "Vector",
+      "t": "VEC",
+      "w": 10,
+      "h": 16,
+      "s": "#00224E/2.4000000953674316"
+     },
+     {
+      "n": "Vector",
+      "t": "VEC",
+      "w": 6,
+      "h": 14,
+      "s": "#00224E/2.4000000953674316"
+     }
+    ]
+   }
+  ]
+ },
+ "217:81": {
+  "n": "LangPill",
+  "t": "COM",
+  "w": 97,
+  "h": 44,
+  "f": "#FFFBF3",
+  "s": "#00224E/2.5",
+  "r": 22,
+  "al": "H gap0 p0,16,0,16 CENTER/CENTER",
+  "k": [
+   {
+    "n": "label",
+    "t": "TEX",
+    "w": 60,
+    "h": 28,
+    "f": "#00224E",
+    "c": "\u0939\u093f\u0902 \u00b7 EN",
+    "fn": "Baloo 2 ExtraBold",
+    "fs": 22,
+    "lh": 28
+   }
+  ]
+ },
+ "217:84": {
+  "n": "state=off",
+  "t": "COM",
+  "w": 110,
+  "h": 44,
+  "f": "#FFFBF3",
+  "s": "#00224E/2",
+  "r": 22,
+  "al": "H gap8 p0,18,0,18 CENTER/CENTER",
+  "k": [
+   {
+    "n": "label",
+    "t": "TEX",
+    "w": 70,
+    "h": 22,
+    "f": "#00224E",
+    "c": "Chip label",
+    "fn": "Rounded Mplus 1c Regular",
+    "fs": 15,
+    "lh": 22
+   }
+  ]
+ },
+ "217:86": {
+  "n": "state=on",
+  "t": "COM",
+  "w": 111,
+  "h": 44,
+  "f": "#FFD265",
+  "s": "#00224E/2.5",
+  "r": 22,
+  "e": "0,3,0,#00224E",
+  "al": "H gap8 p0,18,0,18 CENTER/CENTER",
+  "k": [
+   {
+    "n": "label",
+    "t": "TEX",
+    "w": 70,
+    "h": 22,
+    "f": "#00224E",
+    "c": "Chip label",
+    "fn": "Rounded Mplus 1c Regular",
+    "fs": 15,
+    "lh": 22
+   }
+  ]
+ },
+ "217:90": {
+  "n": "state=default",
+  "t": "COM",
+  "w": 104,
+  "h": 72,
+  "f": "#FFFBF3",
+  "s": "#00224E/2.5",
+  "r": 20,
+  "e": "0,4,0,#00224E",
+  "al": "H gap0 p0,0,0,0 CENTER/CENTER",
+  "k": [
+   {
+    "n": "label",
+    "t": "TEX",
+    "w": 21,
+    "h": 40,
+    "f": "#00224E",
+    "c": "4",
+    "fn": "DM Mono Medium",
+    "fs": 34,
+    "lh": 40
+   }
+  ]
+ },
+ "217:92": {
+  "n": "state=pressed",
+  "t": "COM",
+  "w": 104,
+  "h": 72,
+  "f": "#FFD265",
+  "s": "#00224E/2.5",
+  "r": 20,
+  "e": "0,0,0,#00224E",
+  "al": "H gap0 p0,0,0,0 CENTER/CENTER",
+  "k": [
+   {
+    "n": "label",
+    "t": "TEX",
+    "w": 21,
+    "h": 40,
+    "f": "#00224E",
+    "c": "4",
+    "fn": "DM Mono Medium",
+    "fs": 34,
+    "lh": 40
+   }
+  ]
+ },
+ "217:96": {
+  "n": "state=off",
+  "t": "COM",
+  "w": 64,
+  "h": 48,
+  "f": "#FFFBF3",
+  "s": "#00224E/2.5",
+  "r": 14,
+  "k": []
+ },
+ "217:97": {
+  "n": "state=on",
+  "t": "COM",
+  "w": 64,
+  "h": 48,
+  "f": "#FFD265",
+  "s": "#00224E/2.5",
+  "r": 14,
+  "e": "0,3,0,#00224E",
+  "k": []
+ },
+ "217:100": {
+  "n": "state=empty",
+  "t": "COM",
+  "w": 342,
+  "h": 56,
+  "f": "#FFFFFF",
+  "s": "#00224E/1.5",
+  "r": 16,
+  "al": "H gap10 p0,18,0,18 MIN/CENTER",
+  "k": [
+   {
+    "n": "value",
+    "t": "TEX",
+    "w": 102,
+    "h": 24,
+    "f": "#3E4F72",
+    "c": "you@iitr.ac.in",
+    "fn": "Rounded Mplus 1c Regular",
+    "fs": 16,
+    "lh": 24
+   }
+  ]
+ },
+ "217:102": {
+  "n": "state=filled",
+  "t": "COM",
+  "w": 342,
+  "h": 56,
+  "f": "#FFFFFF",
+  "s": "#00224E/2.5",
+  "r": 16,
+  "al": "H gap10 p0,18,0,18 MIN/CENTER",
+  "k": [
+   {
+    "n": "value",
+    "t": "TEX",
+    "w": 122,
+    "h": 24,
+    "f": "#00224E",
+    "c": "siddhi@iitr.ac.in",
+    "fn": "Rounded Mplus 1c Regular",
+    "fs": 16,
+    "lh": 24
+   }
+  ]
+ },
+ "217:104": {
+  "n": "state=focus",
+  "t": "COM",
+  "w": 342,
+  "h": 56,
+  "f": "#FFFBF3",
+  "s": "#00224E/2.5",
+  "r": 16,
+  "e": "0,4,0,#00224E",
+  "al": "H gap10 p0,18,0,18 MIN/CENTER",
+  "k": [
+   {
+    "n": "value",
+    "t": "TEX",
+    "w": 122,
+    "h": 24,
+    "f": "#00224E",
+    "c": "siddhi@iitr.ac.in",
+    "fn": "Rounded Mplus 1c Regular",
+    "fs": 16,
+    "lh": 24
+   }
+  ]
+ },
+ "217:106": {
+  "n": "state=error",
+  "t": "COM",
+  "w": 342,
+  "h": 56,
+  "f": "#FFFFFF",
+  "s": "#B8530A/2.5",
+  "r": 16,
+  "al": "H gap10 p0,18,0,18 MIN/CENTER",
+  "k": [
+   {
+    "n": "value",
+    "t": "TEX",
+    "w": 122,
+    "h": 24,
+    "f": "#00224E",
+    "c": "siddhi@iitr.ac.in",
+    "fn": "Rounded Mplus 1c Regular",
+    "fs": 16,
+    "lh": 24
+   }
+  ]
+ },
+ "217:110": {
+  "n": "tone=sun",
+  "t": "COM",
+  "w": 67,
+  "h": 29,
+  "f": "#FFD265",
+  "s": "#00224E/1.5",
+  "r": 14,
+  "al": "H gap6 p5,12,5,12 CENTER/CENTER",
+  "k": [
+   {
+    "n": "label",
+    "t": "TEX",
+    "w": 40,
+    "h": 16,
+    "f": "#00224E",
+    "c": "Status",
+    "fn": "Rounded Mplus 1c Medium",
+    "fs": 12.5,
+    "lh": 16
+   }
+  ]
+ },
+ "217:112": {
+  "n": "tone=sky",
+  "t": "COM",
+  "w": 67,
+  "h": 29,
+  "f": "#BDDDFF",
+  "s": "#00224E/1.5",
+  "r": 14,
+  "al": "H gap6 p5,12,5,12 CENTER/CENTER",
+  "k": [
+   {
+    "n": "label",
+    "t": "TEX",
+    "w": 40,
+    "h": 16,
+    "f": "#00224E",
+    "c": "Status",
+    "fn": "Rounded Mplus 1c Medium",
+    "fs": 12.5,
+    "lh": 16
+   }
+  ]
+ },
+ "217:114": {
+  "n": "tone=green",
+  "t": "COM",
+  "w": 67,
+  "h": 29,
+  "f": "#D9EFE3",
+  "s": "#1B7F52/1.5",
+  "r": 14,
+  "al": "H gap6 p5,12,5,12 CENTER/CENTER",
+  "k": [
+   {
+    "n": "label",
+    "t": "TEX",
+    "w": 40,
+    "h": 16,
+    "f": "#1B7F52",
+    "c": "Status",
+    "fn": "Rounded Mplus 1c Medium",
+    "fs": 12.5,
+    "lh": 16
+   }
+  ]
+ },
+ "217:116": {
+  "n": "tone=ember",
+  "t": "COM",
+  "w": 67,
+  "h": 29,
+  "f": "#FBE3D0",
+  "s": "#B8530A/1.5",
+  "r": 14,
+  "al": "H gap6 p5,12,5,12 CENTER/CENTER",
+  "k": [
+   {
+    "n": "label",
+    "t": "TEX",
+    "w": 40,
+    "h": 16,
+    "f": "#B8530A",
+    "c": "Status",
+    "fn": "Rounded Mplus 1c Medium",
+    "fs": 12.5,
+    "lh": 16
+   }
+  ]
+ },
+ "217:118": {
+  "n": "tone=sand",
+  "t": "COM",
+  "w": 67,
+  "h": 29,
+  "f": "#EDE4CF",
+  "s": "#3E4F72/1.5",
+  "r": 14,
+  "al": "H gap6 p5,12,5,12 CENTER/CENTER",
+  "k": [
+   {
+    "n": "label",
+    "t": "TEX",
+    "w": 40,
+    "h": 16,
+    "f": "#00224E",
+    "c": "Status",
+    "fn": "Rounded Mplus 1c Medium",
+    "fs": 12.5,
+    "lh": 16
+   }
+  ]
+ }
+}

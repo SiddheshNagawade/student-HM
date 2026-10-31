@@ -16,3 +16,18 @@ input:focus-visible, textarea:focus-visible { outline: none; }
 /* thin scrollbar on desktop panels */
 .scroll-thin { scrollbar-width: thin; scrollbar-color: #D9D2C2 transparent; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+/* Figma screens: interaction feedback on drawn layers */
+.fig-press { transition: transform 70ms ease; }
+.fig-press:active { transform: translateY(2px); }
+.fig-spot { background: transparent; border: 0; border-radius: 16px; cursor: pointer; padding: 0; }
+.fig-spot:hover { outline: 2.5px dashed rgba(0, 34, 78, .45); outline-offset: 2px; }
+.fig-spot:active { background: rgba(255, 210, 101, .35); }
+.fig-link { text-decoration-thickness: 1.5px; }
+.fig-link:hover { color: #00224E !important; }
+input::placeholder, textarea::placeholder { color: #3E4F72; opacity: 1; }
+/* Plain layers let taps through to the controls beneath them; controls take them. */
+.fig-root div, .fig-root span, .fig-root img { pointer-events: none; }
+.fig-root button, .fig-root input, .fig-root textarea, .fig-root label, .fig-root a { pointer-events: auto; }
+.fig-root button * { pointer-events: none; }
+.fig-root button input, .fig-root label input, .fig-root label textarea { pointer-events: auto; }

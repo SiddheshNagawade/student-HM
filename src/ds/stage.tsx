@@ -23,14 +23,25 @@ function useScale() {
   return s
 }
 
+/** On a phone the 390 x 844 Figma frame is scaled to fit the screen exactly. */
+function MobileFit({ bg, children }: { bg: string; children: ReactNode }) {
+  const [k, setK] = useState(1)
+  useEffect(() => { const f = () => setK(Math.min(innerWidth / 390, innerHeight / 844)); f(); addEventListener('resize', f); return () => removeEventListener('resize', f) }, [])
+  return (
+    <div className="fixed inset-0 flex justify-center overflow-hidden" style={{ background: bg }}>
+      <div style={{ width: 390 * k, height: 844 * k }}><div className="relative origin-top-left overflow-hidden" style={{ width: 390, height: 844, transform: `scale(${k})` }}>{children}</div></div>
+    </div>
+  )
+}
+
 export type SimAction = { label: string; sub?: string; run: () => void }
 export function PhoneStage({ app, tagline, accent = '#FFD265', groups, current, onJump, onRestart, children, bg = '#FFFBF3', sim = [] }: {
   app: string; tagline: string; accent?: string; groups: ScreenGroup[]; current: string; onJump: (id: string) => void; onRestart: () => void; children: ReactNode; bg?: string; sim?: SimAction[]
 }) {
   const wide = useWide(); const scale = useScale(); const muted = useMuted()
-  if (!wide) return <div className="fixed inset-0 overflow-hidden" style={{ background: bg }}>{children}</div>
+  if (!wide) return <MobileFit bg={bg}>{children}</MobileFit>
   return (
-    <div className="fixed inset-0 flex items-center justify-center gap-12 bg-[#F3ECDC] p-6">
+    <div className="fixed inset-0 flex items-center justify-center gap-12 bg-[#EDE4CF] p-6">
       <aside className="flex h-full max-h-[844px] w-[300px] shrink-0 flex-col">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-[12px] border-2 border-navy font-head text-[24px] font-extrabold" style={{ background: accent }}><span className="pt-1">A</span></span>
@@ -50,12 +61,12 @@ export function PhoneStage({ app, tagline, accent = '#FFD265', groups, current, 
         <AnimatePresence>
           {sim.length > 0 && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-              <div className="mt-6 flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.08em] text-canal"><FlaskConical size={15} />Simulate the other side</div>
+              <div className="mt-6 flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.08em] text-navy"><FlaskConical size={15} />Simulate the other side</div>
               <p className="mt-1 text-[13px] text-mid">What the {app.startsWith('Tech') ? 'student and supervisor' : app.startsWith('Student') ? 'supervisor and technician' : 'students and technicians'} would do next.</p>
               <div className="mt-2 flex flex-col gap-2">
                 {sim.map(a => (
-                  <button key={a.label} onClick={() => { fx.tap(); a.run() }} className="flex w-full flex-col items-start rounded-[12px] border-2 border-canal bg-canal2 px-3 py-2 text-left shadow-[0_3px_0_#17606B] transition-transform active:translate-y-[3px] active:shadow-none">
-                    <span className="text-[14px] font-bold text-canal">{a.label}</span>{a.sub && <span className="text-[12px] text-mid">{a.sub}</span>}
+                  <button key={a.label} onClick={() => { fx.tap(); a.run() }} className="flex w-full flex-col items-start rounded-[14px] border-2 border-navy bg-[#FFFBF3] px-3 py-2 text-left shadow-[0_3px_0_#00224E] transition-transform active:translate-y-[3px] active:shadow-none">
+                    <span className="text-[14px] font-bold text-navy">{a.label}</span>{a.sub && <span className="text-[12px] text-mid">{a.sub}</span>}
                   </button>
                 ))}
               </div>

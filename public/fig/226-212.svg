@@ -1,0 +1,6 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="390" height="400" viewBox="0 0 390 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="rings">
+<path id="Vector" d="M345 152H243C234.716 152 228 158.716 228 167C228 175.284 234.716 182 243 182H345C353.284 182 360 175.284 360 167C360 158.716 353.284 152 345 152Z" stroke="#00224E" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 6"/>
+<path id="Vector_2" d="M272 326C285.255 326 296 315.255 296 302C296 288.745 285.255 278 272 278C258.745 278 248 288.745 248 302C248 315.255 258.745 326 272 326Z" stroke="#00224E" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 6"/>
+</g>
+</svg>

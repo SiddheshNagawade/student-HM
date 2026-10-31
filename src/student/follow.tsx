@@ -45,7 +45,7 @@ export function Track() {
   return (
     <Screen top={<TopBar title={`${r.itemLabel} · ${r.issue.toLowerCase()}`} sub={`#${r.id} · ${r.spot}`} />} footer={action}>
       <Rise className="mt-2">
-        <div className={cx('rounded-[20px] border-2 border-navy p-4', r.status === 'closed' ? 'bg-green2' : r.status === 'missed' || r.status === 'disputed' ? 'bg-ember2' : 'bg-sun2')}>
+        <div className={cx('rounded-[20px] border-2 border-navy p-4', r.status === 'closed' ? 'bg-green2' : r.status === 'missed' || r.status === 'disputed' ? 'bg-brick2' : 'bg-sun2')}>
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-[12px] border-2 border-navy bg-paper">{TRADE_ICON[r.trade]}</span>
             <div className="min-w-0 flex-1"><div className="text-[13px] font-bold uppercase tracking-[0.08em] text-mid">{STATUS_LABEL[r.status]}</div><div className="font-head text-[19px] font-bold leading-tight">{NOW_TEXT[r.status](r)}</div></div>
@@ -143,7 +143,7 @@ export function Wrong() {
       <Shake k={k} className="mt-10">
         <div className="rounded-[20px] border-2 border-navy bg-paper p-6 shadow-[0_4px_0_#00224E]">
           <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-mid">{techOf(r).name.split(' ')[0]} typed</div>
-          <div className="mt-3 flex justify-between gap-2">{(r.code.slice(0, 3) + '?').split('').map((c, i) => <span key={i} className={cx('flex h-[70px] flex-1 items-center justify-center rounded-[14px] font-mono text-[40px]', i === 3 ? 'bg-ember2 text-ember' : 'bg-sand')}>{i === 3 ? String((Number(r.code[3]) + 3) % 10) : c}</span>)}</div>
+          <div className="mt-3 flex justify-between gap-2">{(r.code.slice(0, 3) + '?').split('').map((c, i) => <span key={i} className={cx('flex h-[70px] flex-1 items-center justify-center rounded-[14px] font-mono text-[40px]', i === 3 ? 'bg-brick2 text-brick' : 'bg-sand')}>{i === 3 ? String((Number(r.code[3]) + 3) % 10) : c}</span>)}</div>
         </div>
       </Shake>
       <Words text="That code didn't match." className="mt-10 text-center font-head text-h1 font-extrabold" />
@@ -192,7 +192,7 @@ export function Missed() {
             <div className="relative rounded-[4px] border-2 border-navy bg-sun p-4 shadow-card"><span className="absolute -top-2.5 left-1/2 h-4 w-14 -translate-x-1/2 bg-paper/80" /><p className="text-[15px] font-semibold leading-snug">{t.name.split(' ')[0]} came at 8:40 PM. The door was locked.</p></div>
           </Drop>
           <div className="absolute bottom-1 right-2 flex items-center gap-2 text-[14px] font-semibold">
-            {[0, 1].map(i => <span key={i} className={cx('h-4 w-4 rounded-full border-2 border-navy', i <= r.missed ? 'bg-ember' : 'bg-paper')} />)}{Math.min(2, r.missed + 1)} of 2 missed
+            {[0, 1].map(i => <span key={i} className={cx('h-4 w-4 rounded-full border-2 border-navy', i <= r.missed ? 'bg-brick' : 'bg-paper')} />)}{Math.min(2, r.missed + 1)} of 2 missed
           </div>
         </div>
       )}
@@ -251,7 +251,7 @@ export function Closed() {
           {r.rating ? <div className="mt-4"><Stars value={r.rating} size={26} /></div> : null}
           {r.review && <p className="mt-2 text-[14px] italic text-mid">"{r.review}"</p>}
           <Stamp delay={0.45} onLand={fx.stamp} className="absolute right-4 top-4">
-            <div className="flex h-[84px] w-[84px] flex-col items-center justify-center rounded-full border-[3px] border-green text-green" style={{ boxShadow: 'inset 0 0 0 3px #FFFFFF, inset 0 0 0 5px #1B7F52' }}>
+            <div className="flex h-[84px] w-[84px] flex-col items-center justify-center rounded-full border-[3px] border-green text-green" style={{ boxShadow: 'inset 0 0 0 3px #FFFFFF, inset 0 0 0 5px #40713F' }}>
               <Check size={30} strokeWidth={3.5} /><span className="font-head text-[15px] font-extrabold tracking-[0.12em]">FIXED</span>
             </div>
           </Stamp>

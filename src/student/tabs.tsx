@@ -158,7 +158,7 @@ function RequestsTab() {
 }
 
 const ALERT_ICON = { near: <Footprints size={20} />, done: <CheckCheck size={20} />, check: <ShieldCheck size={20} />, part: <PackageSearch size={20} />, missed: <CalendarX2 size={20} />, info: <Info size={20} /> }
-const ALERT_BG = { near: 'bg-sun2', done: 'bg-green2', check: 'bg-sky2', part: 'bg-paper', missed: 'bg-ember2', info: 'bg-paper' }
+const ALERT_BG = { near: 'bg-sun2', done: 'bg-green2', check: 'bg-sky2', part: 'bg-paper', missed: 'bg-brick2', info: 'bg-paper' }
 function InboxTab() {
   const { nav } = useApp()
   const alerts = store.use(s => s.alerts)
@@ -174,7 +174,7 @@ function InboxTab() {
               className={cx('relative flex w-full items-start gap-3 rounded-[16px] border-2 border-navy p-4 text-left transition-transform hover:-translate-y-0.5', ALERT_BG[a.kind])}>
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] border-2 border-navy bg-paper">{ALERT_ICON[a.kind]}</span>
               <span className="min-w-0 flex-1"><span className="block font-head text-[17px] font-bold leading-tight">{a.title}</span><span className="mt-0.5 block text-[14px] leading-snug text-mid">{a.body}</span><span className="mt-1.5 block text-[13px] text-faint">{ago(a.at)}</span></span>
-              {!a.read && <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-ember" aria-label="Unread" />}
+              {!a.read && <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-brick" aria-label="Unread" />}
             </button>
           </Drop>
         ))}

@@ -50,12 +50,12 @@ export function PhoneStage({ app, tagline, accent = '#FFD265', groups, current, 
         <AnimatePresence>
           {sim.length > 0 && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-              <div className="mt-6 flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.08em] text-royal"><FlaskConical size={15} />Simulate the other side</div>
+              <div className="mt-6 flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.08em] text-canal"><FlaskConical size={15} />Simulate the other side</div>
               <p className="mt-1 text-[13px] text-mid">What the {app.startsWith('Tech') ? 'student and supervisor' : app.startsWith('Student') ? 'supervisor and technician' : 'students and technicians'} would do next.</p>
               <div className="mt-2 flex flex-col gap-2">
                 {sim.map(a => (
-                  <button key={a.label} onClick={() => { fx.tap(); a.run() }} className="flex w-full flex-col items-start rounded-[12px] border-2 border-royal bg-royal2 px-3 py-2 text-left shadow-[0_3px_0_#0E2DD2] transition-transform active:translate-y-[3px] active:shadow-none">
-                    <span className="text-[14px] font-bold text-royal">{a.label}</span>{a.sub && <span className="text-[12px] text-mid">{a.sub}</span>}
+                  <button key={a.label} onClick={() => { fx.tap(); a.run() }} className="flex w-full flex-col items-start rounded-[12px] border-2 border-canal bg-canal2 px-3 py-2 text-left shadow-[0_3px_0_#17606B] transition-transform active:translate-y-[3px] active:shadow-none">
+                    <span className="text-[14px] font-bold text-canal">{a.label}</span>{a.sub && <span className="text-[12px] text-mid">{a.sub}</span>}
                   </button>
                 ))}
               </div>

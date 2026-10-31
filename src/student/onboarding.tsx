@@ -87,7 +87,7 @@ export function Verify() {
       <Rise><span className="flex h-14 w-14 items-center justify-center rounded-[16px] border-2 border-navy bg-sky"><Mail size={28} /></span></Rise>
       <Title className="mt-5" sub={<>We sent a 6-digit code to <b className="text-navy">{email}</b>. Open the email, or tap the notification at the top.</>}>Check your email</Title>
       <Rise delay={0.12} className="mt-8"><OtpInput value={code} onChange={v => { setCode(v); setErr(false) }} error={err} shakeKey={shake} onComplete={check} /></Rise>
-      <div className="mt-4 h-6 text-center text-[14px]">{err ? <span className="font-semibold text-ember">That code does not match. {tries} tries left.</span> : null}</div>
+      <div className="mt-4 h-6 text-center text-[14px]">{err ? <span className="font-semibold text-brick">That code does not match. {tries} tries left.</span> : null}</div>
       <div className="mt-2 flex justify-center">
         {wait > 0 ? <span className="text-[15px] text-mid">Resend code in 0:{String(wait).padStart(2, '0')}</span>
           : <LinkButton onClick={() => { const c = code6(); store.set({ otp: c }); setWait(30); deliver(c) }}>Send a new code</LinkButton>}

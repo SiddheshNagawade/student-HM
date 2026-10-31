@@ -93,13 +93,13 @@ export function Safety() {
       <Title className="mt-4" sub="Be honest. It only changes how fast we come.">Sparks, a burning smell, or water near a socket?</Title>
       <div className="mt-5 flex flex-col gap-2.5">
         <Choice layout="row" on={no} title="No, it is safe" sub="Normal priority" icon={<ShieldCheck size={22} className="text-green" />} onClick={() => store.set({ draft: { ...d, urgent: false } })} />
-        <Choice layout="row" on={yes} title="Yes, it looks dangerous" sub="The warden is called right away" icon={<ShieldAlert size={22} className="text-ember" />} onClick={() => { fx.error(); store.set({ draft: { ...d, urgent: true } }) }} />
+        <Choice layout="row" on={yes} title="Yes, it looks dangerous" sub="The warden is called right away" icon={<ShieldAlert size={22} className="text-brick" />} onClick={() => { fx.error(); store.set({ draft: { ...d, urgent: true } }) }} />
       </div>
       <AnimatePresence>
         {yes && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-            <div className="mt-4 flex gap-3 rounded-[16px] border-2 border-ember bg-ember2 p-4">
-              <AlertTriangle className="mt-0.5 shrink-0 text-ember" size={22} />
+            <div className="mt-4 flex gap-3 rounded-[16px] border-2 border-brick bg-brick2 p-4">
+              <AlertTriangle className="mt-0.5 shrink-0 text-brick" size={22} />
               <p className="text-[15px] leading-relaxed text-ink"><b>Step away from it.</b> If you can, switch off the MCB for your room. Do not touch wet switches.</p>
             </div>
           </motion.div>

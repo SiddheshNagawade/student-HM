@@ -9,7 +9,7 @@ button:disabled { cursor: not-allowed; }
 input, textarea { font-family: inherit; color: #00224E; }
 input::placeholder, textarea::placeholder { color: #7A86A3; opacity: 1; }
 :focus { outline: none; }
-:focus-visible { outline: 3px solid #0E2DD2; outline-offset: 2px; border-radius: 12px; }
+:focus-visible { outline: 3px solid #17606B; outline-offset: 2px; border-radius: 12px; }
 input:focus-visible, textarea:focus-visible { outline: none; }
 .no-scrollbar { scrollbar-width: none; } .no-scrollbar::-webkit-scrollbar { display: none; }
 .tabular { font-variant-numeric: tabular-nums; }

@@ -6,14 +6,14 @@
 <path id="Vector_4" d="M79.4 69C84.7 68.9 97.7 69.6 102.8 69.9C107.9 70.1 107.8 69.7 109.9 70.7C111.9 71.7 114.2 74 115.1 75.9C115.9 77.8 114.8 76.3 115.1 82C115.4 87.7 116.5 100.3 116.9 109.9C117.2 119.5 117.5 130.2 117.2 139.8C116.9 149.4 115.7 161.9 115.1 167.6C114.4 173.3 114.1 172.5 113.2 174.2C112.3 175.9 111.2 177 109.7 177.8C108.1 178.7 109 178.8 103.9 179.1C98.8 179.3 84.5 179.2 79 179.3C73.6 179.4 73.3 180.3 71.3 179.6C69.3 178.9 68.3 177.5 67.2 175.3C66.2 173.2 65 172.7 65 166.7C65 160.7 67 148.5 67.2 139.3C67.4 130.2 66.6 121.3 66.2 111.6C65.8 101.9 64.7 87 64.9 81.2C65.1 75.4 66.4 78.6 67.3 76.8C68.3 75 68.6 71.8 70.6 70.5C72.7 69.2 74 69.1 79.4 69Z" stroke="#00224E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 <path id="Vector_5" d="M82 100H100M82 150H100" stroke="#00224E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
 <g id="Group">
-<path id="Vector_6" d="M190 177C218.719 177 242 153.719 242 125C242 96.2812 218.719 73 190 73C161.281 73 138 96.2812 138 125C138 153.719 161.281 177 190 177Z" fill="#BDDDFF" stroke="#00224E" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_6" d="M190 177C218.719 177 242 153.719 242 125C242 96.2812 218.719 73 190 73C161.281 73 138 96.2812 138 125C138 153.719 161.281 177 190 177Z" fill="#C9D7E6" stroke="#00224E" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
 <path id="Vector_7" d="M173 99H170C168.343 99 167 100.343 167 102V122C167 123.657 168.343 125 170 125H173C174.657 125 176 123.657 176 122V102C176 100.343 174.657 99 173 99Z" fill="#00224E"/>
 <path id="Vector_8" d="M210 99H207C205.343 99 204 100.343 204 102V122C204 123.657 205.343 125 207 125H210C211.657 125 213 123.657 213 122V102C213 100.343 211.657 99 210 99Z" fill="#00224E"/>
 <path id="Vector_9" d="M192 137H188C186.343 137 185 138.343 185 140V160C185 161.657 186.343 163 188 163H192C193.657 163 195 161.657 195 160V140C195 138.343 193.657 137 192 137Z" fill="#00224E"/>
 </g>
-<path id="Vector_10" d="M262 10L240 64H266L240 120" stroke="#B8530A" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="Vector_11" d="M290 44L276 78" stroke="#B8530A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="Vector_12" d="M26 190C26 190 18 202 26 208C34 208 34 196 26 190Z" fill="#BDDDFF" stroke="#00224E" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="Vector_13" d="M46 232C46 232 40 242 46 246C52 246 52 238 46 232Z" fill="#BDDDFF" stroke="#00224E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_10" d="M262 10L240 64H266L240 120" stroke="#A6402A" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_11" d="M290 44L276 78" stroke="#A6402A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_12" d="M26 190C26 190 18 202 26 208C34 208 34 196 26 190Z" fill="#C9D7E6" stroke="#00224E" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_13" d="M46 232C46 232 40 242 46 246C52 246 52 238 46 232Z" fill="#C9D7E6" stroke="#00224E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

@@ -83,7 +83,7 @@ export function TabBar({ badge }: { badge?: number }) {
               {on && <motion.span layoutId="tab-pill" className="absolute inset-x-2 inset-y-0.5 rounded-[14px] bg-sun2" transition={spring} />}
               <motion.span className="relative" animate={{ y: on ? -1 : 0, scale: on ? 1.08 : 1 }} transition={spring}>
                 <I size={24} strokeWidth={on ? 2.6 : 2} />
-                {t.id === 'inbox' && !!badge && <span className="absolute -right-2 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-paper bg-ember px-1 text-[11px] font-bold text-white">{badge}</span>}
+                {t.id === 'inbox' && !!badge && <span className="absolute -right-2 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-paper bg-brick px-1 text-[11px] font-bold text-white">{badge}</span>}
               </motion.span>
               <span className={cx('relative text-[12px]', on ? 'font-bold' : 'font-medium text-mid')}>{t.label}</span>
             </button>
@@ -103,8 +103,8 @@ export function DemoDock({ bottom = 112 }: { bottom?: number }) {
   return (
     <>
       <motion.div className="absolute right-4 z-30" style={{ bottom }}>
-        <motion.span className="absolute inset-0 rounded-full bg-royal/30" animate={{ scale: [1, 1.5], opacity: [0.7, 0] }} transition={{ duration: 1.6, repeat: Infinity }} />
-        <IconButton label="Demo: simulate what happens next" side="left" variant="dark" size={48} onClick={() => setOpen(true)} className="!bg-royal"><FlaskConical size={22} /></IconButton>
+        <motion.span className="absolute inset-0 rounded-full bg-canal/30" animate={{ scale: [1, 1.5], opacity: [0.7, 0] }} transition={{ duration: 1.6, repeat: Infinity }} />
+        <IconButton label="Demo: simulate what happens next" side="left" variant="dark" size={48} onClick={() => setOpen(true)} className="!bg-canal"><FlaskConical size={22} /></IconButton>
       </motion.div>
       <Sheet open={open} onClose={() => setOpen(false)}>
         <div className="mb-1 flex items-center justify-between">

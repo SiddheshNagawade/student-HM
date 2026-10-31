@@ -1,6 +1,6 @@
 <svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="repair">
-<path id="Vector" d="M33.5 20C33.5 23.4 32.6 27.2 30.4 29.4C28.1 31.6 23.5 33 20 33.1C16.5 33.3 12.1 32.6 9.5 30.4C7 28.2 4.8 23.5 4.8 20C4.8 16.5 7.1 11.8 9.6 9.6C12.2 7.5 16.5 7.1 20 7C23.5 6.9 28.3 7.1 30.5 9.3C32.8 11.4 33.5 16.6 33.5 20Z" stroke="#B8530A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="Vector_2" d="M13 22L18 27L28 14" stroke="#B8530A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector" d="M33.5 20C33.5 23.4 32.6 27.2 30.4 29.4C28.1 31.6 23.5 33 20 33.1C16.5 33.3 12.1 32.6 9.5 30.4C7 28.2 4.8 23.5 4.8 20C4.8 16.5 7.1 11.8 9.6 9.6C12.2 7.5 16.5 7.1 20 7C23.5 6.9 28.3 7.1 30.5 9.3C32.8 11.4 33.5 16.6 33.5 20Z" stroke="#A6402A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_2" d="M13 22L18 27L28 14" stroke="#A6402A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </svg>

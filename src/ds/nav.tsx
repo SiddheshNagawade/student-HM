@@ -119,7 +119,7 @@ export const PlaneGlyph = ({ size = 64 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
     <path d="M6 30 L58 8 L44 56 L30 38 Z" fill="#FFFBF3" stroke="#00224E" strokeWidth="3" strokeLinejoin="round" />
     <path d="M30 38 L58 8 L22 34" fill="#FFD265" stroke="#00224E" strokeWidth="3" strokeLinejoin="round" />
-    <path d="M30 38 L28 50 L36 44" fill="#BDDDFF" stroke="#00224E" strokeWidth="3" strokeLinejoin="round" />
+    <path d="M30 38 L28 50 L36 44" fill="#C9D7E6" stroke="#00224E" strokeWidth="3" strokeLinejoin="round" />
   </svg>
 )
 

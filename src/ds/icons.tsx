@@ -129,7 +129,7 @@ export const Star = mk('Star', (fill) => <path d="M24 7l5 12 13 1-10 9 3 13-11-7
 /* ---------- filled glyphs straight from Figma ---------- */
 /** Green wobbly tick badge (bag check, steps done, closures). */
 export function TickBadge({ size = 34, tone = 'green', className }: { size?: number; tone?: 'green' | 'sun' | 'empty'; className?: string }) {
-  const fill = tone === 'green' ? '#1B7F52' : tone === 'sun' ? '#FFD265' : 'none'
+  const fill = tone === 'green' ? '#40713F' : tone === 'sun' ? '#FFD265' : 'none'
   return (
     <svg width={size} height={size} viewBox="0 0 34 34" fill="none" className={className} aria-hidden="true">
       {tone !== 'empty' && <path d="M31.1 19c0 3.1-.2 7.2-2.2 9.3-2 2.2-6.7 3.6-9.9 3.6s-7.2-1.7-9.3-3.8C7.6 25.9 6.6 22 6.5 19c0-3 .8-6.9 2.8-9.2C11.4 7.6 15.7 5.5 19 5.4c3.3-.1 7.9 1.8 9.9 4.1 2 2.2 2.2 6.4 2.2 9.5Z" fill={fill} />}
@@ -140,13 +140,13 @@ export function TickBadge({ size = 34, tone = 'green', className }: { size?: num
 }
 
 /** Hand-drawn dot used in the supervisor charts. kind: open request, past promise (ring), blocked, selected. */
-export function WobbleDot({ size = 22, kind = 'navy' }: { size?: number; kind?: 'navy' | 'ring' | 'ember' | 'selected' | 'blue' | 'sun' | 'faint' }) {
+export function WobbleDot({ size = 22, kind = 'navy' }: { size?: number; kind?: 'navy' | 'ring' | 'brick' | 'selected' | 'blue' | 'sun' | 'faint' }) {
   const p = 'M18.6 11c0 1.5-.9 3.7-2.2 4.7-1.2 1.1-3.6 1.5-5.4 1.6-1.8.1-4.3.1-5.4-1-1.1-1-1.5-3.7-1.4-5.3 0-1.6.6-3.2 1.8-4.4C7.1 5.4 9.3 3.9 11 3.9s3.7 1.4 4.9 2.6c1.3 1.1 2.6 3 2.7 4.5Z'
-  const fill = { navy: '#00224E', ember: '#B8530A', selected: '#B8530A', blue: '#0E2DD2', sun: '#FFD265', ring: 'none', faint: 'rgba(0,34,78,.15)' }[kind]
-  const stroke = kind === 'ring' ? '#B8530A' : kind === 'faint' ? 'none' : '#00224E'
+  const fill = { navy: '#00224E', brick: '#A6402A', selected: '#A6402A', blue: '#17606B', sun: '#FFD265', ring: 'none', faint: 'rgba(0,34,78,.15)' }[kind]
+  const stroke = kind === 'ring' ? '#A6402A' : kind === 'faint' ? 'none' : '#00224E'
   return (
     <svg width={size} height={size} viewBox="0 0 22 22" fill="none" aria-hidden="true" style={{ display: 'block', flexShrink: 0 }}>
-      {kind === 'selected' && <circle cx="11" cy="10.6" r="10" stroke="#0E2DD2" strokeWidth="2" />}
+      {kind === 'selected' && <circle cx="11" cy="10.6" r="10" stroke="#17606B" strokeWidth="2" />}
       <path d={p} fill={fill} stroke={stroke} strokeWidth={kind === 'ring' ? 2.6 : 2.2} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )

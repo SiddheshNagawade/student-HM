@@ -8,6 +8,13 @@ import { spring, springPop, Shake } from './motion'
 
 export const cx = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(' ')
 
+/* Look: 'app' is the phone style (firm 2px edge, pressable shadow). 'desk' is the supervisor's
+   desktop style: hairline borders, smaller radii, flat surfaces, semibold body type. */
+export type Look = 'app' | 'desk'
+const LookCtx = createContext<Look>('app')
+export const LookProvider = ({ look, children }: { look: Look; children: ReactNode }) => <LookCtx.Provider value={look}>{children}</LookCtx.Provider>
+export const useLook = () => useContext(LookCtx)
+
 /* ---------------- Tooltip (hover name on desktop, long-press free) ---------------- */
 export function Tooltip({ label, children, side = 'top', className = '', disabled }: { label: ReactNode; children: ReactNode; side?: 'top' | 'bottom' | 'right' | 'left'; className?: string; disabled?: boolean }) {
   const [open, setOpen] = useState(false)
@@ -21,8 +28,8 @@ export function Tooltip({ label, children, side = 'top', className = '', disable
       {children}
       <AnimatePresence>
         {open && (
-          <motion.span role="tooltip" initial={{ opacity: 0, scale: 0.9, ...o }} animate={{ opacity: 1, scale: 1, x: 0, y: 0 }} exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.08 } }} transition={springPop}
-            className={cx('pointer-events-none absolute z-50 whitespace-nowrap rounded-[10px] bg-navy px-2.5 py-1.5 font-body text-[13px] font-medium leading-tight text-cream shadow-lift', pos)}>
+          <motion.span role="tooltip" initial={{ opacity: 0, scale: 0.9, ...o }} animate={{ opacity: 1, scale: 1, x: 0, y: 0 }} exit={{ opacity: 0, transition: { duration: 0.08 } }} transition={{ duration: 0.14, ease: [0.22, 1, 0.36, 1] }}
+            className={cx('pointer-events-none absolute z-50 whitespace-nowrap rounded-[8px] bg-navy px-2.5 py-1.5 font-body text-[13px] font-medium leading-tight text-cream shadow-pop', pos)}>
             {label}
           </motion.span>
         )}
@@ -32,7 +39,7 @@ export function Tooltip({ label, children, side = 'top', className = '', disable
 }
 
 /* ---------------- Buttons ---------------- */
-export type BtnVariant = 'primary' | 'secondary' | 'dark' | 'blue' | 'royal' | 'danger' | 'ghost' | 'quiet'
+export type BtnVariant = 'primary' | 'secondary' | 'dark' | 'blue' | 'canal' | 'danger' | 'ghost' | 'quiet'
 type BtnProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onDrag' | 'onDragStart' | 'onDragEnd' | 'onAnimationStart'> & {
   variant?: BtnVariant; size?: 'lg' | 'md' | 'sm' | 'xs'; icon?: ReactNode; iconRight?: ReactNode; loading?: boolean; full?: boolean; sound?: FxName | false; tip?: string
 }
@@ -41,15 +48,39 @@ const VARIANT: Record<BtnVariant, string> = {
   secondary: 'bg-paper text-navy border-navy shadow-btn',
   dark: 'bg-navy text-cream border-navy shadow-[0_3px_0_#000F24]',
   blue: 'bg-signal2 text-white border-navy shadow-btn',
-  royal: 'bg-royal text-white border-navy shadow-btn',
-  danger: 'bg-ember text-white border-navy shadow-btn',
+  canal: 'bg-canal text-white border-navy shadow-btn',
+  danger: 'bg-brick text-white border-navy shadow-btn',
   ghost: 'bg-transparent text-navy border-transparent shadow-none hover:bg-navy/5',
   quiet: 'bg-sand text-navy border-transparent shadow-none hover:bg-sand2',
 }
+const VARIANT_DESK: Record<BtnVariant, string> = {
+  primary: 'bg-navy text-cream border-navy hover:bg-ink',
+  secondary: 'bg-paper text-navy border-line hover:border-navy/35 hover:bg-cream',
+  dark: 'bg-navy text-cream border-navy hover:bg-ink',
+  blue: 'bg-signal2 text-white border-signal2',
+  canal: 'bg-canal text-white border-canal hover:bg-[#124F59]',
+  danger: 'bg-brick text-white border-brick hover:bg-[#8E3522]',
+  ghost: 'bg-transparent text-navy border-transparent hover:bg-navy/[0.05]',
+  quiet: 'bg-sand text-navy border-transparent hover:bg-sand2',
+}
+const SIZE_DESK = { lg: 'h-11 px-5 text-[15px] rounded-[10px] gap-2', md: 'h-10 px-4 text-[14px] rounded-[9px] gap-2', sm: 'h-9 px-3.5 text-[14px] rounded-[8px] gap-1.5', xs: 'h-7 px-2.5 text-[13px] rounded-[7px] gap-1.5' }
 const SIZE = { lg: 'h-14 px-6 text-[17px] rounded-[16px] gap-2.5', md: 'h-12 px-5 text-[16px] rounded-[14px] gap-2', sm: 'h-10 px-4 text-[15px] rounded-[12px] gap-2', xs: 'h-8 px-3 text-[13px] rounded-[10px] gap-1.5' }
 export const Button = forwardRef<HTMLButtonElement, BtnProps>(function Button({ variant = 'primary', size = 'lg', icon, iconRight, loading, full = true, sound = 'tap', className, children, onClick, disabled, tip, ...p }, ref) {
   const reduce = useReducedMotion()
-  const flat = variant === 'ghost' || variant === 'quiet'
+  const desk = useLook() === 'desk'
+  const flat = desk || variant === 'ghost' || variant === 'quiet'
+  if (desk) {
+    const d = (
+      <button ref={ref} {...(p as object)} disabled={disabled || loading} onClick={e => { if (sound) fx[sound](); onClick?.(e) }}
+        className={cx('relative inline-flex select-none items-center justify-center border font-body font-semibold leading-none transition-colors active:translate-y-px',
+          SIZE_DESK[size], VARIANT_DESK[variant], full && 'w-full', (disabled || loading) && 'opacity-50', className)}>
+        {loading ? <Loader2 className="animate-spin" size={18} /> : icon}
+        {children && <span className="truncate">{children}</span>}
+        {!loading && iconRight}
+      </button>
+    )
+    return tip ? <Tooltip label={tip}>{d}</Tooltip> : d
+  }
   const b = (
     <motion.button ref={ref} {...(p as object)} disabled={disabled || loading}
       onClick={e => { if (sound) fx[sound](); onClick?.(e) }}
@@ -70,29 +101,30 @@ export const Button = forwardRef<HTMLButtonElement, BtnProps>(function Button({ 
 export function IconButton({ label, children, onClick, variant = 'secondary', size = 44, className, badge, side = 'bottom', active, sound = 'tap', disabled }: {
   label: string; children: ReactNode; onClick?: () => void; variant?: 'secondary' | 'dark' | 'ghost' | 'sun' | 'blue'; size?: number; className?: string; badge?: boolean | number; side?: 'top' | 'bottom' | 'left' | 'right'; active?: boolean; sound?: FxName | false; disabled?: boolean
 }) {
+  const desk = useLook() === 'desk'
   const v = { secondary: 'bg-paper border-navy text-navy', dark: 'bg-navy border-navy text-cream', ghost: 'bg-transparent border-transparent text-navy hover:bg-navy/5', sun: 'bg-sun border-navy text-navy', blue: 'bg-signal2 border-navy text-white' }[variant]
   return (
     <Tooltip label={label} side={side}>
       <motion.button aria-label={label} disabled={disabled} onClick={() => { if (sound) fx[sound](); onClick?.() }} whileTap={{ scale: 0.9 }} transition={springPop}
-        className={cx('relative inline-flex shrink-0 items-center justify-center rounded-full border-2', v, active && 'ring-4 ring-sun/70', disabled && 'opacity-50', className)} style={{ width: size, height: size }}>
+        className={cx('relative inline-flex shrink-0 items-center justify-center', desk ? 'rounded-[8px] border border-transparent' : 'rounded-full border-2', v, desk && variant === 'secondary' && '!border-line', active && 'ring-4 ring-sun/70', disabled && 'opacity-50', className)} style={{ width: size, height: size }}>
         {children}
-        {!!badge && <span className={cx('absolute -right-1 -top-1 flex min-w-[18px] items-center justify-center rounded-full border-2 border-paper bg-ember px-1 text-[11px] font-bold leading-[14px] text-white', badge === true && 'h-[14px] min-w-[14px] px-0')}>{badge === true ? '' : badge}</span>}
+        {!!badge && <span className={cx('absolute -right-1 -top-1 flex min-w-[18px] items-center justify-center rounded-full border-2 border-paper bg-brick px-1 text-[11px] font-bold leading-[14px] text-white', badge === true && 'h-[14px] min-w-[14px] px-0')}>{badge === true ? '' : badge}</span>}
       </motion.button>
     </Tooltip>
   )
 }
 
-export const LinkButton = ({ children, onClick, className, tone = 'mid' }: { children: ReactNode; onClick?: () => void; className?: string; tone?: 'mid' | 'navy' | 'ember' | 'white' }) => (
+export const LinkButton = ({ children, onClick, className, tone = 'mid' }: { children: ReactNode; onClick?: () => void; className?: string; tone?: 'mid' | 'navy' | 'brick' | 'white' }) => (
   <button onClick={() => { fx.tap(); onClick?.() }} className={cx('inline-flex min-h-[44px] items-center justify-center px-2 font-body text-[15px] font-semibold underline decoration-2 underline-offset-4',
-    { mid: 'text-mid decoration-mid/30 hover:text-navy', navy: 'text-navy decoration-navy/30', ember: 'text-ember decoration-ember/40', white: 'text-white decoration-white/40' }[tone], className)}>{children}</button>
+    { mid: 'text-mid decoration-mid/30 hover:text-navy', navy: 'text-navy decoration-navy/30', brick: 'text-brick decoration-brick/40', white: 'text-white decoration-white/40' }[tone], className)}>{children}</button>
 )
 
 /* ---------------- Selection ---------------- */
-type Tone = 'sun' | 'sky' | 'royal'
-const ON_BG: Record<Tone, string> = { sun: 'bg-sun2', sky: 'bg-sky2', royal: 'bg-royal2' }
+type Tone = 'sun' | 'sky' | 'canal'
+const ON_BG: Record<Tone, string> = { sun: 'bg-sun2', sky: 'bg-sky2', canal: 'bg-canal2' }
 const CheckBadge = ({ tone = 'sun' }: { tone?: Tone }) => (
   <motion.span initial={{ scale: 0, rotate: -40 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }} transition={springPop}
-    className={cx('flex h-6 w-6 items-center justify-center rounded-full border-2 border-navy', tone === 'royal' ? 'bg-royal text-white' : 'bg-navy text-cream')}>
+    className={cx('flex h-6 w-6 items-center justify-center rounded-full border-2 border-navy', tone === 'canal' ? 'bg-canal text-white' : 'bg-navy text-cream')}>
     <Check size={14} strokeWidth={3.5} />
   </motion.span>
 )
@@ -102,6 +134,16 @@ export function Choice({ on, onClick, title, sub, art, icon, tone = 'sun', class
   on: boolean; onClick: () => void; title: ReactNode; sub?: ReactNode; art?: ReactNode; icon?: ReactNode; tone?: Tone; className?: string; layout?: 'tile' | 'row'; disabled?: boolean; badge?: ReactNode
 }) {
   const row = layout === 'row'
+  if (useLook() === 'desk') return (
+    <button type="button" role="radio" aria-checked={on} disabled={disabled} onClick={() => { on ? fx.tap() : fx.select(); onClick() }}
+      className={cx('relative flex w-full items-center gap-3 rounded-[10px] border px-3.5 py-3 text-left transition-colors',
+        on ? 'border-navy bg-cream ring-1 ring-navy' : 'border-line bg-paper hover:border-navy/35', disabled && 'opacity-50', className)}>
+      <Radio on={on} tone={tone} />
+      {(art || icon) && <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] bg-sand">{art || icon}</span>}
+      <span className="flex min-w-0 flex-1 flex-col"><span className="text-[15px] font-semibold leading-tight">{title}</span>{sub && <span className="mt-0.5 text-[13px] leading-snug text-mid">{sub}</span>}</span>
+      {badge}
+    </button>
+  )
   return (
     <motion.button type="button" role="radio" aria-checked={on} disabled={disabled} onClick={() => { on ? fx.tap() : fx.select(); onClick() }}
       whileTap={{ scale: 0.97 }} transition={springPop}
@@ -122,8 +164,8 @@ export function Choice({ on, onClick, title, sub, art, icon, tone = 'sun', class
 
 export function Radio({ on, tone = 'sun' }: { on: boolean; tone?: Tone }) {
   return (
-    <span className={cx('flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-navy bg-paper')}>
-      <motion.span className={cx('h-3 w-3 rounded-full', tone === 'royal' ? 'bg-royal' : 'bg-navy')} initial={false} animate={{ scale: on ? 1 : 0 }} transition={springPop} />
+    <span className={cx('flex shrink-0 items-center justify-center rounded-full bg-paper', useLook() === 'desk' ? 'h-[18px] w-[18px] border-[1.5px] border-navy' : 'h-6 w-6 border-2 border-navy')}>
+      <motion.span className={cx(useLook() === 'desk' ? 'h-2 w-2' : 'h-3 w-3', 'rounded-full', tone === 'canal' ? 'bg-canal' : 'bg-navy')} initial={false} animate={{ scale: on ? 1 : 0 }} transition={springPop} />
     </span>
   )
 }
@@ -140,12 +182,18 @@ export function Checkbox({ on, onChange, label, sub }: { on: boolean; onChange: 
 }
 
 /** Toggle chip (tags, quick feedback). Selected = navy fill with a check that slides in. */
-export function Chip({ on, onClick, children, size = 'md', tone = 'navy' }: { on: boolean; onClick: () => void; children: ReactNode; size?: 'md' | 'sm'; tone?: 'navy' | 'royal' }) {
+export function Chip({ on, onClick, children, size = 'md', tone = 'navy' }: { on: boolean; onClick: () => void; children: ReactNode; size?: 'md' | 'sm'; tone?: 'navy' | 'canal' }) {
+  if (useLook() === 'desk') return (
+    <button type="button" aria-pressed={on} onClick={() => { on ? fx.deselect() : fx.select(); onClick() }}
+      className={cx('inline-flex h-9 items-center gap-1.5 rounded-[8px] border px-3 text-[14px] font-medium transition-colors', on ? 'border-navy bg-navy text-cream' : 'border-line bg-paper text-navy hover:border-navy/35')}>
+      {on && <Check size={15} strokeWidth={2.6} />}{children}
+    </button>
+  )
   return (
     <motion.button type="button" aria-pressed={on} onClick={() => { on ? fx.deselect() : fx.select(); onClick() }} whileTap={{ scale: 0.94 }} transition={springPop} layout
       className={cx('inline-flex items-center gap-1.5 rounded-full border-2 font-body font-semibold transition-colors',
         size === 'md' ? 'h-10 px-4 text-[15px]' : 'h-8 px-3 text-[13px]',
-        on ? (tone === 'royal' ? 'border-royal bg-royal text-white' : 'border-navy bg-navy text-cream') : 'border-line bg-paper text-navy hover:border-navy/50')}>
+        on ? (tone === 'canal' ? 'border-canal bg-canal text-white' : 'border-navy bg-navy text-cream') : 'border-line bg-paper text-navy hover:border-navy/50')}>
       <AnimatePresence initial={false}>{on && <motion.span initial={{ width: 0, opacity: 0 }} animate={{ width: 16, opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="flex overflow-hidden"><Check size={16} strokeWidth={3} /></motion.span>}</AnimatePresence>
       {children}
     </motion.button>
@@ -153,8 +201,23 @@ export function Chip({ on, onClick, children, size = 'md', tone = 'navy' }: { on
 }
 
 /** Segmented control (tabs inside a page). The pill slides between options. */
-export function Segmented<T extends string>({ value, onChange, options, className, tone = 'navy' }: { value: T; onChange: (v: T) => void; options: { v: T; label: ReactNode; count?: number }[]; className?: string; tone?: 'navy' | 'royal' }) {
+export function Segmented<T extends string>({ value, onChange, options, className, tone = 'navy' }: { value: T; onChange: (v: T) => void; options: { v: T; label: ReactNode; count?: number }[]; className?: string; tone?: 'navy' | 'canal' }) {
   const id = useId()
+  if (useLook() === 'desk') return (
+    <div role="tablist" className={cx('inline-flex rounded-[10px] bg-sand p-[3px]', className)}>
+      {options.map(o => {
+        const on = o.v === value
+        return (
+          <button key={o.v} role="tab" aria-selected={on} onClick={() => { if (!on) { fx.select(); onChange(o.v) } }}
+            className={cx('relative flex h-8 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-[8px] px-3.5 text-[14px] font-semibold transition-colors', on ? 'text-navy' : 'text-mid hover:text-navy')}>
+            {on && <motion.span layoutId={id} className="absolute inset-0 rounded-[8px] bg-paper shadow-[0_1px_2px_rgba(0,34,78,.14),0_0_0_1px_rgba(0,34,78,.06)]" transition={{ type: 'spring', stiffness: 600, damping: 45 }} />}
+            <span className="relative">{o.label}</span>
+            {o.count !== undefined && <span className={cx('relative min-w-[20px] rounded-[5px] px-1.5 text-[12px] leading-[18px] tabular', on ? 'bg-navy text-cream' : 'bg-sand2 text-mid')}>{o.count}</span>}
+          </button>
+        )
+      })}
+    </div>
+  )
   return (
     <div role="tablist" className={cx('inline-flex rounded-[14px] border-2 border-navy bg-paper p-1', className)}>
       {options.map(o => {
@@ -162,7 +225,7 @@ export function Segmented<T extends string>({ value, onChange, options, classNam
         return (
           <button key={o.v} role="tab" aria-selected={on} onClick={() => { if (!on) { fx.select(); onChange(o.v) } }}
             className={cx('relative flex h-10 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] px-4 font-head text-[15px] font-bold transition-colors', on ? 'text-white' : 'text-navy hover:bg-navy/5')}>
-            {on && <motion.span layoutId={id} className={cx('absolute inset-0 rounded-[10px]', tone === 'royal' ? 'bg-royal' : 'bg-navy')} transition={spring} />}
+            {on && <motion.span layoutId={id} className={cx('absolute inset-0 rounded-[10px]', tone === 'canal' ? 'bg-canal' : 'bg-navy')} transition={spring} />}
             <span className="relative pt-[2px]">{o.label}</span>
             {o.count !== undefined && <span className={cx('relative min-w-[22px] rounded-full px-1.5 text-[12px] leading-[20px]', on ? 'bg-white/20' : 'bg-sand2')}>{o.count}</span>}
           </button>
@@ -172,8 +235,16 @@ export function Segmented<T extends string>({ value, onChange, options, classNam
   )
 }
 
-export function Toggle({ on, onChange, label, sub, className, tone = 'navy' }: { on: boolean; onChange: (v: boolean) => void; label?: ReactNode; sub?: ReactNode; className?: string; tone?: 'navy' | 'blue' | 'royal' }) {
-  const bg = { navy: 'bg-navy', blue: 'bg-signal2', royal: 'bg-royal' }[tone]
+export function Toggle({ on, onChange, label, sub, className, tone = 'navy' }: { on: boolean; onChange: (v: boolean) => void; label?: ReactNode; sub?: ReactNode; className?: string; tone?: 'navy' | 'blue' | 'canal' }) {
+  const bg = { navy: 'bg-navy', blue: 'bg-signal2', canal: 'bg-canal' }[tone]
+  if (useLook() === 'desk') return (
+    <button type="button" role="switch" aria-checked={on} onClick={() => { on ? fx.toggleOff() : fx.toggleOn(); onChange(!on) }} className={cx('flex w-full items-center justify-between gap-4 text-left', className)}>
+      {(label || sub) && <span className="flex min-w-0 flex-col"><span className="text-[15px] font-semibold leading-snug">{label}</span>{sub && <span className="mt-0.5 text-[13px] text-mid">{sub}</span>}</span>}
+      <span className={cx('relative flex h-6 w-[42px] shrink-0 items-center rounded-full px-[3px] transition-colors', on ? bg : 'bg-line')}>
+        <motion.span className="h-[18px] w-[18px] rounded-full bg-paper shadow-[0_1px_2px_rgba(0,0,0,.25)]" animate={{ x: on ? 18 : 0 }} transition={{ type: 'spring', stiffness: 700, damping: 40 }} />
+      </span>
+    </button>
+  )
   return (
     <button type="button" role="switch" aria-checked={on} onClick={() => { on ? fx.toggleOff() : fx.toggleOn(); onChange(!on) }}
       className={cx('flex w-full items-center justify-between gap-4 text-left', className)}>
@@ -189,19 +260,20 @@ export function Toggle({ on, onChange, label, sub, className, tone = 'navy' }: {
 type FieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'prefix'> & { label?: string; hint?: ReactNode; error?: ReactNode; prefix?: ReactNode; suffix?: ReactNode; shakeKey?: number }
 export const TextField = forwardRef<HTMLInputElement, FieldProps>(function TextField({ label, hint, error, prefix, suffix, className, shakeKey = 0, id, ...p }, ref) {
   const auto = useId(); const fid = id || auto
+  const desk = useLook() === 'desk'
   return (
     <div className={cx('w-full', className)}>
-      {label && <label htmlFor={fid} className="mb-1.5 block text-[14px] font-semibold text-navy">{label}</label>}
+      {label && <label htmlFor={fid} className={cx('block font-semibold text-navy', desk ? 'mb-1 text-[13px]' : 'mb-1.5 text-[14px]')}>{label}</label>}
       <Shake k={shakeKey}>
-        <div className={cx('flex h-14 items-center gap-2 rounded-[14px] border-2 bg-paper px-4 transition-[border-color,box-shadow]',
-          error ? 'border-ember shadow-[0_0_0_4px_rgba(184,83,10,.12)]' : 'border-line focus-within:border-navy focus-within:shadow-[0_0_0_4px_rgba(0,34,78,.10)]')}>
+        <div className={cx('flex items-center gap-2 bg-paper transition-[border-color,box-shadow]', desk ? 'h-11 rounded-[9px] border px-3' : 'h-14 rounded-[14px] border-2 px-4', desk && !error && '!border-line focus-within:!border-canal focus-within:!shadow-[0_0_0_3px_rgba(23,96,107,.15)]',
+          error ? 'border-brick shadow-[0_0_0_4px_rgba(166,64,42,.12)]' : 'border-line focus-within:border-navy focus-within:shadow-[0_0_0_4px_rgba(0,34,78,.10)]')}>
           {prefix && <span className="shrink-0 text-mid">{prefix}</span>}
-          <input ref={ref} id={fid} aria-invalid={!!error} {...p} className="h-full min-w-0 flex-1 bg-transparent text-[16px] outline-none" />
+          <input ref={ref} id={fid} aria-invalid={!!error} {...p} className={cx('h-full min-w-0 flex-1 bg-transparent outline-none', desk ? 'text-[15px]' : 'text-[16px]')} />
           {suffix && <span className="shrink-0 text-mid">{suffix}</span>}
         </div>
       </Shake>
       <AnimatePresence initial={false} mode="wait">
-        {error ? <motion.p key="e" initial={{ y: -4, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} className="mt-1.5 flex items-center gap-1.5 text-[13px] font-medium text-ember"><AlertCircle size={15} />{error}</motion.p>
+        {error ? <motion.p key="e" initial={{ y: -4, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} className="mt-1.5 flex items-center gap-1.5 text-[13px] font-medium text-brick"><AlertCircle size={15} />{error}</motion.p>
           : hint ? <motion.p key="h" initial={false} className="mt-1.5 text-[13px] text-mid">{hint}</motion.p> : null}
       </AnimatePresence>
     </div>
@@ -210,10 +282,11 @@ export const TextField = forwardRef<HTMLInputElement, FieldProps>(function TextF
 
 export function TextArea({ label, hint, className, ...p }: TextareaHTMLAttributes<HTMLTextAreaElement> & { label?: string; hint?: ReactNode }) {
   const id = useId()
+  const desk = useLook() === 'desk'
   return (
     <div className={cx('w-full', className)}>
-      {label && <label htmlFor={id} className="mb-1.5 block text-[14px] font-semibold">{label}</label>}
-      <textarea id={id} {...p} className="block min-h-[104px] w-full resize-none rounded-[14px] border-2 border-line bg-paper px-4 py-3 text-[16px] leading-snug outline-none transition-[border-color,box-shadow] focus:border-navy focus:shadow-[0_0_0_4px_rgba(0,34,78,.10)]" />
+      {label && <label htmlFor={id} className={cx('block font-semibold', desk ? 'mb-1 text-[13px]' : 'mb-1.5 text-[14px]')}>{label}</label>}
+      <textarea id={id} {...p} className={cx('block min-h-[104px] w-full resize-none bg-paper leading-snug outline-none transition-[border-color,box-shadow]', desk ? 'rounded-[9px] border border-line px-3 py-2.5 text-[15px] focus:border-canal focus:shadow-[0_0_0_3px_rgba(23,96,107,.15)]' : 'rounded-[14px] border-2 border-line px-4 py-3 text-[16px] focus:border-navy focus:shadow-[0_0_0_4px_rgba(0,34,78,.10)]')} />
       {hint && <p className="mt-1.5 text-[13px] text-mid">{hint}</p>}
     </div>
   )
@@ -235,7 +308,7 @@ export function OtpInput({ value, onChange, length = 6, error, shakeKey = 0, aut
           return (
             <motion.div key={i} animate={{ y: active ? -3 : 0, scale: ch ? [1.12, 1] : 1 }} transition={springPop}
               className={cx('relative flex items-center justify-center rounded-[14px] border-2 bg-paper font-mono font-medium', w,
-                error ? 'border-ember bg-ember2 text-ember' : ch ? 'border-navy' : active ? 'border-navy shadow-btn' : 'border-line')}>
+                error ? 'border-brick bg-brick2 text-brick' : ch ? 'border-navy' : active ? 'border-navy shadow-btn' : 'border-line')}>
               {ch}
               {active && !ch && <motion.span className="absolute h-7 w-[2px] rounded bg-navy" animate={{ opacity: [1, 0, 1] }} transition={{ duration: 1, repeat: Infinity }} />}
             </motion.div>
@@ -266,6 +339,11 @@ export function Keypad({ onKey, onDelete, tone = 'paper', extra }: { onKey: (d: 
 
 /* ---------------- Surfaces ---------------- */
 export function Card({ children, className, variant = 'outline', onClick, style }: { children: ReactNode; className?: string; variant?: 'outline' | 'raised' | 'flat' | 'soft'; onClick?: () => void; style?: CSSProperties }) {
+  if (useLook() === 'desk') {
+    const d = { outline: 'border border-line bg-paper', raised: 'border border-line bg-paper shadow-desk', flat: 'bg-sand', soft: 'border border-line bg-paper shadow-desk' }[variant]
+    if (onClick) return <button style={style} onClick={() => { fx.tap(); onClick() }} className={cx('block w-full rounded-[12px] text-left transition-colors hover:border-navy/30 hover:bg-cream', d, className)}>{children}</button>
+    return <div style={style} className={cx('rounded-[12px]', d, className)}>{children}</div>
+  }
   const v = { outline: 'border-2 border-navy bg-paper', raised: 'border-2 border-navy bg-paper shadow-btn', flat: 'bg-sand', soft: 'border border-line bg-paper shadow-card' }[variant]
   if (onClick) return <motion.button style={style} onClick={() => { fx.tap(); onClick() }} whileTap={{ scale: 0.985 }} whileHover={{ y: -2 }} transition={springPop} className={cx('block w-full rounded-[20px] text-left', v, className)}>{children}</motion.button>
   return <div style={style} className={cx('rounded-[20px]', v, className)}>{children}</div>
@@ -274,9 +352,9 @@ export function Card({ children, className, variant = 'outline', onClick, style 
 export function ListRow({ icon, title, sub, right, onClick, chevron = true, className, danger }: { icon?: ReactNode; title: ReactNode; sub?: ReactNode; right?: ReactNode; onClick?: () => void; chevron?: boolean; className?: string; danger?: boolean }) {
   const body = (
     <>
-      {icon && <span className={cx('flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px]', danger ? 'bg-ember2 text-ember' : 'bg-sand text-navy')}>{icon}</span>}
+      {icon && <span className={cx('flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px]', danger ? 'bg-brick2 text-brick' : 'bg-sand text-navy')}>{icon}</span>}
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className={cx('truncate text-[16px] font-semibold leading-snug', danger && 'text-ember')}>{title}</span>
+        <span className={cx('truncate text-[16px] font-semibold leading-snug', danger && 'text-brick')}>{title}</span>
         {sub && <span className="truncate text-[13px] text-mid">{sub}</span>}
       </span>
       {right}
@@ -293,13 +371,15 @@ export const SectionLabel = ({ children, className, right }: { children: ReactNo
 
 export type TagTone = 'neutral' | 'info' | 'success' | 'warn' | 'danger' | 'dark' | 'sun'
 export function Tag({ children, tone = 'neutral', icon, className }: { children: ReactNode; tone?: TagTone; icon?: ReactNode; className?: string }) {
-  const t = { neutral: 'bg-sand2 text-navy', info: 'bg-sky2 text-signal2', success: 'bg-green2 text-green', warn: 'bg-sun2 text-ember', danger: 'bg-ember2 text-ember', dark: 'bg-navy text-cream', sun: 'bg-sun text-navy' }[tone]
-  return <span className={cx('inline-flex h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-[13px] font-semibold', t, className)}>{icon}{children}</span>
+  const t = { neutral: 'bg-sand2 text-navy', info: 'bg-canal2 text-canal', success: 'bg-green2 text-green', warn: 'bg-sun2 text-brick', danger: 'bg-brick2 text-brick', dark: 'bg-navy text-cream', sun: 'bg-sun text-navy' }[tone]
+  const desk = useLook() === 'desk'
+  return <span className={cx('inline-flex shrink-0 items-center gap-1 whitespace-nowrap font-semibold', desk ? 'h-6 rounded-[6px] px-2 text-[12px]' : 'h-7 rounded-full px-2.5 text-[13px]', t, className)}>{icon}{children}</span>
 }
 
-export function Avatar({ name, size = 44, tone = 'sun', className }: { name: string; size?: number; tone?: 'sun' | 'sky' | 'green' | 'sand' | 'royal'; className?: string }) {
-  const bg = { sun: 'bg-sun', sky: 'bg-sky', green: 'bg-green2', sand: 'bg-sand2', royal: 'bg-royal2' }[tone]
+export function Avatar({ name, size = 44, tone = 'sun', className }: { name: string; size?: number; tone?: 'sun' | 'sky' | 'green' | 'sand' | 'canal'; className?: string }) {
+  const bg = { sun: 'bg-sun', sky: 'bg-sky', green: 'bg-green2', sand: 'bg-sand2', canal: 'bg-canal2' }[tone]
   const initials = name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+  if (useLook() === 'desk') return <span className={cx('inline-flex shrink-0 items-center justify-center rounded-full font-body font-semibold text-navy', bg, className)} style={{ width: size, height: size, fontSize: size * 0.36 }}>{initials}</span>
   return <span className={cx('inline-flex shrink-0 items-center justify-center rounded-full border-2 border-navy font-head font-extrabold', bg, className)} style={{ width: size, height: size, fontSize: size * 0.38 }}><span className="pt-[2px]">{initials}</span></span>
 }
 
@@ -411,6 +491,7 @@ export function Sheet({ open, onClose, children, title, className }: { open: boo
 }
 
 export function Dialog({ open, onClose, children, title, width = 480, footer }: { open: boolean; onClose: () => void; children: ReactNode; title?: ReactNode; width?: number; footer?: ReactNode }) {
+  const desk = useLook() === 'desk'
   useEffect(() => {
     if (!open) return
     fx.pop()
@@ -421,15 +502,15 @@ export function Dialog({ open, onClose, children, title, width = 480, footer }: 
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-          <motion.div className="absolute inset-0 bg-navy/55" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
-          <motion.div role="dialog" aria-modal className="relative max-h-full overflow-y-auto rounded-[24px] border-2 border-navy bg-cream p-7 shadow-[0_6px_0_#00224E]" style={{ width }}
+          <motion.div className={cx('absolute inset-0', desk ? 'bg-navy/35' : 'bg-navy/55')} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
+          <motion.div role="dialog" aria-modal className={cx('relative max-h-full overflow-y-auto', desk ? 'rounded-[16px] border border-line bg-paper p-6 shadow-pop' : 'rounded-[24px] border-2 border-navy bg-cream p-7 shadow-[0_6px_0_#00224E]')} style={{ width }}
             initial={{ y: 10, scale: 0.98, opacity: 0 }} animate={{ y: 0, scale: 1, opacity: 1 }} exit={{ y: 6, opacity: 0, transition: { duration: 0.1 } }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}>
             <div className="mb-3 flex items-start justify-between gap-4">
-              {title && <h2 className="font-head text-h2 font-extrabold leading-tight">{title}</h2>}
+              {title && <h2 className={cx('font-head leading-tight', desk ? 'text-[22px] font-bold' : 'text-h2 font-extrabold')}>{title}</h2>}
               <IconButton label="Close" variant="ghost" size={36} onClick={onClose}><X size={20} /></IconButton>
             </div>
             {children}
-            {footer && <div className="mt-6 flex items-center gap-3">{footer}</div>}
+            {footer && <div className={cx('mt-6 flex items-center gap-3', desk && '-mx-6 -mb-6 justify-end border-t border-rule bg-cream px-6 py-4 [&>*:first-child]:order-last')}>{footer}</div>}
           </motion.div>
         </div>
       )}
@@ -439,7 +520,7 @@ export function Dialog({ open, onClose, children, title, width = 480, footer }: 
 
 /* ---------------- Toasts: sticky notes, phone notifications, desktop snackbars ---------------- */
 export type ToastOpts = {
-  kind?: 'sticky' | 'system' | 'bar'; title: ReactNode; body?: ReactNode; app?: string; icon?: ReactNode; tone?: 'sun' | 'sky' | 'green' | 'ember'
+  kind?: 'sticky' | 'system' | 'bar'; title: ReactNode; body?: ReactNode; app?: string; icon?: ReactNode; tone?: 'sun' | 'sky' | 'green' | 'brick'
   action?: { label: string; run: () => void }; onTap?: () => void; ms?: number
 }
 type ToastItem = ToastOpts & { id: number }
@@ -471,7 +552,7 @@ export function ToastOutlet({ placement = 'top' }: { placement?: 'top' | 'bottom
 }
 
 function ToastView({ t, close }: { t: ToastItem; close: () => void }) {
-  const tone = { sun: 'bg-sun2', sky: 'bg-sky2', green: 'bg-green2', ember: 'bg-ember2' }[t.tone || 'sun']
+  const tone = { sun: 'bg-sun2', sky: 'bg-sky2', green: 'bg-green2', brick: 'bg-brick2' }[t.tone || 'sun']
   const tap = () => { if (t.onTap) { fx.tap(); t.onTap(); close() } }
   if (t.kind === 'system') return (
     <motion.div layout drag="y" dragConstraints={{ top: 0, bottom: 0 }} onDragEnd={(_: unknown, i: PanInfo) => i.offset.y < -30 && close()}
@@ -487,9 +568,9 @@ function ToastView({ t, close }: { t: ToastItem; close: () => void }) {
   )
   if (t.kind === 'bar') return (
     <motion.div layout initial={{ y: 60, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 40, opacity: 0 }} transition={springPop}
-      className="pointer-events-auto flex min-h-[52px] items-center gap-4 rounded-[16px] border-2 border-navy bg-navy px-5 py-2 text-cream shadow-lift">
+      className="pointer-events-auto flex min-h-[48px] items-center gap-3 rounded-[12px] bg-navy px-4 py-2 text-cream shadow-pop">
       {t.icon}<span className="text-[15px] font-semibold">{t.title}</span>{t.body && <span className="text-[14px] opacity-80">{t.body}</span>}
-      {t.action && <button onClick={() => { fx.tap(); t.action!.run(); close() }} className="ml-2 rounded-[10px] bg-sun px-3 py-1.5 text-[14px] font-bold text-navy">{t.action.label}</button>}
+      {t.action && <button onClick={() => { fx.tap(); t.action!.run(); close() }} className="ml-2 rounded-[8px] px-2.5 py-1.5 text-[14px] font-semibold text-sun hover:bg-white/10">{t.action.label}</button>}
     </motion.div>
   )
   return (

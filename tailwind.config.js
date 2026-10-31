@@ -4,11 +4,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        cream: '#FFFBF3', paper: '#FFFFFF', sand: '#F7F0E1', sand2: '#EDE4CF', line: '#D9D2C2',
-        navy: '#00224E', ink: '#0B1B36', mid: '#46557A', faint: '#7A86A3',
-        sun: '#FFD265', sun2: '#FFF3CF', sun3: '#FFE7A3',
-        signal: '#0794FF', signal2: '#0571C9', sky: '#BDDDFF', sky2: '#E6F2FF',
-        green: '#1B7F52', green2: '#E3F4EA', ember: '#B8530A', ember2: '#FBE9DC', royal: '#0E2DD2', royal2: '#E7EBFF',
+        /* Base, from the Figma: navy ink on warm paper, sunflower accent. */
+        cream: '#FFFBF3', paper: '#FFFFFF', sand: '#F6F0E3', sand2: '#ECE4D2', line: '#DDD5C4', rule: '#ECE6D9',
+        navy: '#00224E', ink: '#0B1B36', mid: '#4A5873', faint: '#7D879B',
+        sun: '#FFD265', sun2: '#FCF1D4', sun3: '#F7E1A2',
+        /* Technician brand blue, from the Figma. */
+        signal: '#0794FF', signal2: '#0571C9',
+        /* Secondary colours, taken from Roorkee rather than a default palette:
+           canal = the Upper Ganga Canal, brick = the Main Building, neem = the campus trees, slate = Himalayan haze. */
+        canal: '#17606B', canal2: '#DCEBEA',
+        brick: '#A6402A', brick2: '#F4E1D8',
+        green: '#40713F', green2: '#E4ECDD',
+        sky: '#C9D7E6', sky2: '#EDF2F6',
       },
       fontFamily: {
         head: ['"League Spartan"', 'system-ui', 'sans-serif'],
@@ -23,7 +30,7 @@ export default {
       },
       borderRadius: { xl2: '18px', xl3: '24px' },
       boxShadow: {
-        btn: '0 3px 0 #00224E', btnHover: '0 4px 0 #00224E', card: '0 2px 0 rgba(0,34,78,.12), 0 8px 24px -12px rgba(0,34,78,.25)',
+        btn: '0 3px 0 #00224E', desk: '0 1px 2px rgba(0,34,78,.06), 0 1px 1px rgba(0,34,78,.04)', pop: '0 24px 60px -24px rgba(0,34,78,.40), 0 2px 6px rgba(0,34,78,.08)', btnHover: '0 4px 0 #00224E', card: '0 2px 0 rgba(0,34,78,.12), 0 8px 24px -12px rgba(0,34,78,.25)',
         lift: '0 18px 40px -18px rgba(0,34,78,.45)', phone: '0 40px 80px -30px rgba(0,34,78,.55), 0 0 0 10px #00224E',
       },
     },

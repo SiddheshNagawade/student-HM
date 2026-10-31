@@ -25,11 +25,11 @@ const seed = (): State => ({
   signedIn: false, email: '', name: '', hostel: 'Himalaya Bhawan', block: 'B', floor: 'G', room: '04',
   hours: HOURS, alertsOn: false, online: true, draft: emptyDraft(),
   reqs: [
-    { id: '2391', item: 'Tube light', issue: 'Flickering', trade: 'Electrical', where: 'Corridor F2', at: n - 4 * D, stage: 2, tech: 'Ravi Kumar', techTrade: 'Electrician', slot: '8:30 to 9:00 PM', day: 'Thu 1 Oct', code: '5182', part: 'tube light choke', letIn: true, tries: 0, missed: 0 },
+    { id: '2391', item: 'Tube light', issue: 'Flickering', trade: 'Electrical', where: 'Corridor F2', at: n - 4 * D, stage: 2, tech: 'Ravi Kumar', techTrade: 'Electrician', slot: '11:00 to 11:30 AM', day: 'Thu 1 Oct', code: '5182', part: 'tube light choke', letIn: true, tries: 0, missed: 0 },
   ],
   alerts: [],
 })
-export const store = createStore<State>('align.student.fig.v1', seed)
+export const store = createStore<State>('align.student.fig.v2', seed)
 
 export const roomCode = (s: Pick<State, 'block' | 'floor' | 'room'>) => `${(s.block || 'B').toUpperCase()}${(s.floor || 'G').toUpperCase()}${(s.room || '04').padStart(2, '0')}`
 export const firstName = (name: string) => (name || 'Siddhi').split(' ')[0]
@@ -56,3 +56,5 @@ export const setReq = (id: string, p: Partial<Req>) => store.set(s => ({ reqs: s
 export const ago = (t: number) => { const m = Math.round((Date.now() - t) / 60000); if (m < 1) return 'just now'; if (m < 60) return `${m} min ago`; const h = Math.round(m / 60); if (h < 24) return `${h} hour${h > 1 ? 's' : ''} ago`; const d = Math.round(h / 24); return d === 1 ? 'yesterday' : `${d} days ago` }
 export const stamp = (t: number) => new Date(t).toLocaleString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).replace(',', ' ·').replace(' am', ' AM').replace(' pm', ' PM')
 export { H, D }
+/** Technicians work 10 AM to 6 PM. A visit time outside that is moved to the end of the last working day. */
+export const workTime = (t = Date.now()) => { const d = new Date(t); const h = d.getHours() + d.getMinutes() / 60; if (h >= 10 && h < 18) return t; if (h < 10) d.setDate(d.getDate() - 1); d.setHours(17, 48, 0, 0); return d.getTime() }

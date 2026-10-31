@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useNav, Stage } from '../ds/nav'
 import { PhoneStage, ScreenGroup, SimAction } from '../ds/stage'
 import { AppCtx, ALL, Screen } from './screens'
-import { store, active, setReq, pushAlert, code4 } from './store'
+import { store, active, setReq, pushAlert, code4, workTime } from './store'
 
 const GROUPS: ScreenGroup[] = [
   { title: 'Getting in', items: [{ id: 'welcome', label: 'Welcome' }, { id: 'signin', label: 'Sign in' }, { id: 'verify', label: 'Check your email' }, { id: 'isyou', label: 'Is this you' }, { id: 'where', label: 'Where do you live' }, { id: 'hours', label: 'Usual free hours' }, { id: 'allow', label: 'Allow alerts' }, { id: 'homeEmpty', label: 'Home, nothing broken' }] },
@@ -23,13 +23,13 @@ function ensure(scr: Screen) {
   const needReq = ['home', 'sent', 'detail', 'near', 'code', 'wrong', 'rate', 'closed', 'missed', 'whatswrong'].includes(scr)
   if (needReq && !active(store.get())) {
     const id = '2418'
-    store.set(x => ({ current: id, reqs: [{ id, item: 'Ceiling fan', issue: 'Not spinning', trade: 'Electrical', where: 'BG04', at: Date.now() - 2 * 86400000, stage: 2, tech: 'Ravi Kumar', techTrade: 'Electrician', slot: '8:30 to 9:00 PM', day: 'Today', code: code4(), letIn: false, tries: 0, missed: 1 }, ...x.reqs] }))
+    store.set(x => ({ current: id, reqs: [{ id, item: 'Ceiling fan', issue: 'Not spinning', trade: 'Electrical', where: 'BG04', at: Date.now() - 2 * 86400000, stage: 2, tech: 'Ravi Kumar', techTrade: 'Electrician', slot: '2:30 to 3:00 PM', day: 'Today', code: code4(), letIn: false, tries: 0, missed: 1 }, ...x.reqs] }))
   }
   const r = active(store.get())
   if (r) {
     if (scr === 'home' && r.stage < 3) setReq(r.id, { stage: 3 })
     if (scr === 'code' || scr === 'wrong') setReq(r.id, { stage: 4, tries: Math.max(1, r.tries) })
-    if (scr === 'closed' || scr === 'rate') setReq(r.id, { stage: 5, closedAt: Date.now(), fix: 'Replaced the fan capacitor and tested all speed settings.', stars: scr === 'closed' ? 5 : r.stars })
+    if (scr === 'closed' || scr === 'rate') setReq(r.id, { stage: 5, closedAt: workTime(), fix: 'Replaced the fan capacitor and tested all speed settings.', stars: scr === 'closed' ? 5 : r.stars })
   }
   if (scr === 'part') { const p = store.get().reqs.find(x => x.part); if (p) store.set({ current: p.id }) }
   if (scr === 'alerts' && !store.get().alerts.length) {
@@ -55,7 +55,7 @@ function Inner() {
     if (r.stage <= 2) sim.push({ label: `${tf} is 10 minutes away`, sub: 'Technician near', run: () => { setReq(r.id, { stage: 3 }); pushAlert({ title: `${tf} is 10 minutes away`, sub: `${r.item} · just now`, reqId: r.id, kind: 'near' }); nav.go('near', { tr: 'wave', p: { id: r.id } }) } })
     if (r.stage <= 3) sim.push({ label: `${tf} says it is fixed`, sub: 'Closing code', run: () => { setReq(r.id, { stage: 4 }); nav.go('code', { tr: 'wave', p: { id: r.id } }) } })
     if (r.stage === 4) {
-      sim.push({ label: `${tf} enters the right code`, sub: 'The job closes', run: () => { setReq(r.id, { stage: 5, closedAt: Date.now(), fix: 'Fixed and tested before closing.' }); pushAlert({ title: 'Closed with your code', sub: `${r.item} · just now`, reqId: r.id, kind: 'closed' }); nav.replace('rate', { tr: 'wave', p: { id: r.id } }) } })
+      sim.push({ label: `${tf} enters the right code`, sub: 'The job closes', run: () => { setReq(r.id, { stage: 5, closedAt: workTime(), fix: 'Fixed and tested before closing.' }); pushAlert({ title: 'Closed with your code', sub: `${r.item} · just now`, reqId: r.id, kind: 'closed' }); nav.replace('rate', { tr: 'wave', p: { id: r.id } }) } })
       sim.push({ label: `${tf} enters a wrong code`, sub: 'Wrong code', run: () => { const t = r.code.slice(0, 3) + ((+r.code[3] + 3) % 10); setReq(r.id, { tries: r.tries + 1 }); nav.go('wrong', { tr: 'wave', p: { id: r.id, tried: t } }) } })
     }
     if (r.stage <= 3) sim.push({ label: `${tf} finds the door locked`, sub: 'Missed visit', run: () => { setReq(r.id, { missed: r.missed + 1 }); nav.go('missed', { tr: 'wave', p: { id: r.id } }) } })

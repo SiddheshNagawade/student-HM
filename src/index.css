@@ -20,9 +20,15 @@ input:focus-visible, textarea:focus-visible { outline: none; }
 /* Figma screens: interaction feedback on drawn layers */
 .fig-press { transition: transform 70ms ease; }
 .fig-press:active { transform: translateY(2px); }
-.fig-spot { background: transparent; border: 0; border-radius: 16px; cursor: pointer; padding: 0; }
-.fig-spot:hover { outline: 2.5px dashed rgba(0, 34, 78, .45); outline-offset: 2px; }
-.fig-spot:active { background: rgba(255, 210, 101, .35); }
+.fig-spot { background: transparent; border: 0; border-radius: 18px; cursor: pointer; padding: 0; transition: background .15s, box-shadow .15s, transform .12s; }
+/* Tappable parts of a drawing: a soft sun-coloured glow says "this one", no extra icons on top of the drawing. */
+.fig-spot:hover, .fig-spot:focus-visible { background: radial-gradient(closest-side, rgba(255, 210, 101, .55), rgba(255, 210, 101, 0)); outline: none; }
+.fig-spot:active { background: radial-gradient(closest-side, rgba(255, 210, 101, .8), rgba(255, 210, 101, 0)); transform: scale(.96); }
+/* On first view, each tappable part glows once, one after another, so you can see what can be tapped. */
+@keyframes fighint { 0%, 100% { background: transparent; } 40% { background: radial-gradient(closest-side, rgba(255, 210, 101, .7), rgba(255, 210, 101, 0)); } }
+.fig-hint { animation: fighint 1.1s ease-in-out both; }
+/* Cards and tiles you can press lift a little under the pointer and sink when pressed. */
+@media (hover: hover) { .fig-press:hover { transform: translateY(-2px); } }
 .fig-link { text-decoration-thickness: 1.5px; }
 .fig-link:hover { color: #00224E !important; }
 input::placeholder, textarea::placeholder { color: #3E4F72; opacity: 1; }
@@ -40,3 +46,11 @@ input::placeholder, textarea::placeholder { color: #3E4F72; opacity: 1; }
 @keyframes figfade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes figbar { from { transform: scaleX(0); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .fig-root * { animation: none !important; } }
+/* A notice board hung on its pin: drops in, swings, settles. Once. */
+@keyframes figswing {
+  0% { transform: translateY(-46px) rotate(-17deg); opacity: 0; }
+  14% { transform: translateY(0) rotate(-17deg); opacity: 1; }
+  32% { transform: rotate(11deg); } 49% { transform: rotate(-7deg); } 64% { transform: rotate(4deg); }
+  78% { transform: rotate(-2deg); } 90% { transform: rotate(.8deg); } 100% { transform: none; opacity: 1; }
+}
+.fig-press:active { transform: translateY(2px); }

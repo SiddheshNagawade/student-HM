@@ -28,7 +28,7 @@ function MobileFit({ bg, children }: { bg: string; children: ReactNode }) {
   const [k, setK] = useState(1)
   useEffect(() => { const f = () => setK(Math.min(innerWidth / 390, innerHeight / 844)); f(); addEventListener('resize', f); return () => removeEventListener('resize', f) }, [])
   return (
-    <div className="fixed inset-0 flex justify-center overflow-hidden" style={{ background: bg }}>
+    <div className="fixed inset-0 flex items-center justify-center overflow-hidden" style={{ background: bg }}>
       <div style={{ width: 390 * k, height: 844 * k }}><div className="relative origin-top-left overflow-hidden" style={{ width: 390, height: 844, transform: `scale(${k})` }}>{children}</div></div>
     </div>
   )

@@ -206,7 +206,7 @@ function segs(n: FNode) {
 export function Fig({ s, binds = {}, extra, bg }: { s: FNode; binds?: Binds; extra?: ReactNode; bg?: string }) {
   return (
     <C.Provider value={{ binds }}>
-      <div className="fig-root" style={{ position: 'relative', width: s.w, height: s.h, background: bg || color(s.f), overflow: 'hidden' }}>
+      <div className="fig-root" style={{ position: 'relative', isolation: 'isolate', width: s.w, height: s.h, background: bg || color(s.f), overflow: 'hidden' }}>
         {s.k?.map(k => <Layer key={k.i} n={k} p={{ x: 0, y: 0 }} />)}
         {extra}
       </div>

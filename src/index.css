@@ -3,11 +3,16 @@
 @tailwind utilities;
 
 html, body, #root { height: 100%; }
-body { margin: 0; background: #FFFBF3; color: #00224E; font-family: 'Hiragino Maru Gothic ProN', 'Rounded Mplus 1c', sans-serif; -webkit-tap-highlight-color: transparent; }
-h1, h2, h3, button { font-family: 'League Spartan', sans-serif; }
-button { cursor: pointer; }
+body { margin: 0; background: #F3ECDC; color: #00224E; font-family: 'DM Sans', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
+button { cursor: pointer; font: inherit; color: inherit; }
+button:disabled { cursor: not-allowed; }
 input, textarea { font-family: inherit; color: #00224E; }
-input::placeholder, textarea::placeholder { color: #3E4F72; opacity: .7; }
-/* hand-drawn wobble for meaningful objects (ticket, slip, sticky note, bubble) */
-.wobble { filter: url(#wobble); }
+input::placeholder, textarea::placeholder { color: #7A86A3; opacity: 1; }
+:focus { outline: none; }
+:focus-visible { outline: 3px solid #0E2DD2; outline-offset: 2px; border-radius: 12px; }
+input:focus-visible, textarea:focus-visible { outline: none; }
+.no-scrollbar { scrollbar-width: none; } .no-scrollbar::-webkit-scrollbar { display: none; }
+.tabular { font-variant-numeric: tabular-nums; }
+/* thin scrollbar on desktop panels */
+.scroll-thin { scrollbar-width: thin; scrollbar-color: #D9D2C2 transparent; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }

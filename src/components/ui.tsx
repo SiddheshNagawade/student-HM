@@ -87,24 +87,26 @@ export function Speaker({ text, lang = 'hi-IN', className }: { text: string; lan
   )
 }
 
-/* Meaningful objects stay hand-drawn: irregular radius + hard shadow, optional tape */
-export function Paper({ children, className, tone = 'cream', tape }: { children: ReactNode; className?: string; tone?: 'cream' | 'sun' | 'sun2' | 'sky'; tape?: boolean }) {
-  const bg = { cream: 'bg-cream', sun: 'bg-sun', sun2: 'bg-sun2', sky: 'bg-sky' }[tone]
+/* Hand-drawn art exported from Figma into /public/art. Never redrawn in code. */
+export const Art = ({ n, className, style, w }: { n: string; className?: string; style?: React.CSSProperties; w?: number | string }) =>
+  <img src={`/art/${n}.svg`} alt="" draggable={false} className={cx('block select-none', className)} style={{ ...(w ? { width: w, height: 'auto' } : {}), ...style }} />
+
+/* A Figma paper object (ticket, slip, sticky, bubble, tag...) stretched behind live content */
+export function ArtBox({ n, children, className, style }: { n: string; children?: ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
-    <div className={cx('relative border-[2.5px] border-navy shadow-[3px_4px_0_#00224E]', bg, className)} style={{ borderRadius: '14px 6px 16px 5px / 6px 16px 6px 14px' }}>
-      {tape && <span className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-5 bg-sun/90 border-2 border-navy/60 rotate-[-3deg]" />}
-      {children}
+    <div className={cx('relative', className)} style={style}>
+      <img src={`/art/${n}.svg`} alt="" draggable={false} className="absolute inset-0 w-full h-full select-none pointer-events-none" />
+      <div className="relative h-full">{children}</div>
     </div>
   )
 }
 
-export function Beaver({ pose = 'wave', size = 150, className }: { pose?: 'wave' | 'walk' | 'thumbs' | 'point' | 'jump' | 'sit' | 'think' | 'cele' | 'stand'; size?: number; className?: string }) {
-  // TODO: only the wave pose is exported from Figma so far; other poses reuse it until exported into /public/art
+export type Pose = 'wave' | 'walk' | 'thumbs' | 'point' | 'jump' | 'sit' | 'think' | 'cele' | 'stand'
+export function Beaver({ pose = 'wave', size, className }: { pose?: Pose; size?: number; className?: string }) {
   const reduce = useReducedMotion()
-  const rot = pose === 'think' ? -4 : pose === 'cele' ? 6 : 0
   return (
-    <motion.img src="/art/beaver-wave.svg" alt="" width={size} className={className} style={{ rotate: rot }}
-      animate={reduce || pose !== 'cele' ? undefined : { y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 1.2 }} />
+    <motion.img src={`/art/beaver-${pose}.svg`} alt="" draggable={false} className={cx('block select-none', className)} style={size ? { width: size, height: 'auto' } : undefined}
+      animate={reduce || pose !== 'cele' ? undefined : { y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 1.4 }} />
   )
 }
 
@@ -114,12 +116,12 @@ export function OfflineBanner({ children }: { children: ReactNode }) {
 
 /* Full-page blocking error */
 export function ErrorPage({ pose = 'think', title, body, primary, secondary, tone = 'student', hindi }: {
-  pose?: 'think' | 'wave' | 'sit'; title: string; body: string; primary: [string, () => void]; secondary?: [string, () => void]; tone?: 'student' | 'tech' | 'sup'; hindi?: boolean
+  pose?: Pose; title: string; body: string; primary: [string, () => void]; secondary?: [string, () => void]; tone?: 'student' | 'tech' | 'sup'; hindi?: boolean
 }) {
   const sup = tone === 'sup'
   return (
     <div className={cx('h-full flex flex-col items-center', sup ? 'justify-center' : 'pt-[120px] px-6', hindi && 'font-hi')}>
-      <Beaver pose={pose} size={sup ? 120 : 110} />
+      <Beaver pose={pose === 'sit' ? 'sit' : pose} />
       <h1 className={cx('font-head font-extrabold text-center mt-4', sup ? 'text-[24px]' : 'text-[24px]', hindi && '!font-hi text-[26px]')}>{title}</h1>
       <p className="text-center text-[13.5px] text-mid mt-3 max-w-[300px]">{body}</p>
       <div className={cx(sup ? 'flex gap-3 mt-6' : 'mt-auto mb-8 w-full flex flex-col items-center gap-3')}>

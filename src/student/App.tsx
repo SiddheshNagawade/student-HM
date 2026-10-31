@@ -19,7 +19,7 @@ export type Ctx = {
 }
 
 export default function App() {
-  const nav = useStack<Screen>('welcome')
+  const nav = useStack<Screen>((new URLSearchParams(location.search).get('s') as Screen) || 'welcome')
   const [online, setOnline] = useState(navigator.onLine)
   useEffect(() => { const u = () => setOnline(true), d = () => setOnline(false); addEventListener('online', u); addEventListener('offline', d); return () => { removeEventListener('online', u); removeEventListener('offline', d) } }, [])
   const [email, setEmail] = useState('')

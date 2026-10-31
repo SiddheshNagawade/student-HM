@@ -1,0 +1,14 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="260" height="118.182" viewBox="0 0 260 118.182" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="plane" clip-path="url(#clip0_0_4)">
+<path id="Vector" d="M4.72727 102.424C55.1515 110.303 86.6667 47.2727 149.697 70.9091C212.727 94.5455 228.485 31.5152 250.545 18.9091" stroke="#00224E" stroke-width="2.04848" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.36 7.88"/>
+<g id="Group">
+<path id="Vector_2" d="M224.602 22.2132L267.238 -4.56993L251.653 35.7948L245.294 21.0368L224.602 22.2132Z" fill="#FFFBF3" stroke="#00224E" stroke-width="2.36364" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_3" d="M245.294 21.0368L267.238 -4.56994" stroke="#00224E" stroke-width="1.89091" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_0_4">
+<rect width="260" height="118.182" fill="white"/>
+</clipPath>
+</defs>
+</svg>

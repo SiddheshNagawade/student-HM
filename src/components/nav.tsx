@@ -30,13 +30,11 @@ export function Transition({ id, dir, mode, children }: { id: string; dir: numbe
   )
 }
 
-/* Phone frame: full screen on a phone, 390x844 card on a larger screen */
+/* Full screen. The phone apps fill the whole screen; on a wide screen the content column stays 480 wide but the background still fills everything. */
 export function Phone({ children, bg = '#FFF3CF' }: { children: ReactNode; bg?: string }) {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center sm:bg-sand sm:p-6">
-      <div className="relative w-full sm:w-[390px] h-[100dvh] sm:h-[844px] sm:max-h-[calc(100vh-48px)] overflow-hidden sm:rounded-[36px] sm:border-[2.5px] sm:border-navy sm:shadow-[0_6px_0_#00224E]" style={{ background: bg }}>
-        {children}
-      </div>
+    <div className="fixed inset-0 flex justify-center" style={{ background: bg }}>
+      <div className="relative w-full max-w-[480px] h-full overflow-hidden" style={{ background: bg }}>{children}</div>
     </div>
   )
 }

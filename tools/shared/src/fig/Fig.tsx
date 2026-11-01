@@ -3,8 +3,9 @@
    text and font of every layer). This component draws them exactly, at 1:1, and lets the app attach
    behaviour to any layer by its Figma node id: replace its text, hide it, make it clickable, turn an
    Input into a real text field, swap a drawing, or animate it. Nothing is restyled here. */
-import React, { CSSProperties, ReactNode, createContext, useContext, useState } from 'react'
+import React, { CSSProperties, ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { fx } from '../ds/fx'
+import { artUrl, svgText, preloadAll, allWarm, srcFor } from './preload'
 
 export type FNode = {
   i: string; t: string; n: string; x: number; y: number; w: number; h: number
@@ -147,7 +148,7 @@ function KitIcon({ n, p, b, file, label }: { n: FNode; p: { x: number; y: number
   return (
     <button type="button" aria-label={b?.label || label} title={b?.label || label} onClick={() => { fx.tap(); b?.onClick?.() }}
       style={{ ...box(n, p), padding: 0, border: 0, background: 'none', cursor: 'pointer', borderRadius: '50%', ...b?.style }} className="fig-press">
-      {b?.render ? b.render(n) : <img src={figArt(file)} alt="" width={n.w} height={n.h} draggable={false} />}
+      {b?.render ? b.render(n) : <img src={srcFor(figArt(file))} alt="" width={n.w} height={n.h} draggable={false} />}
     </button>
   )
 }
@@ -177,7 +178,7 @@ function Layer({ n, p }: { n: FNode; p: { x: number; y: number } }) {
     else if (mc === 'LangPill') el = <KitIcon n={n} p={q} b={b} file="kit-217:81" label="Change language" />
     else el = b?.render ? <div style={box(n, q)}>{b.render(n)}</div> : <div style={{ ...box(n, q), background: color(n.f), ...stroke(n.s), borderRadius: n.r, boxShadow: shadow(n.e) }} />
   } else if (n.art) {
-    const img = <img src={figArt(b?.art || n.i)} alt="" draggable={false} style={{ display: 'block', maxWidth: 'none', pointerEvents: 'none' }} />
+    const img = <img src={srcFor(figArt(b?.art || n.i))} alt="" draggable={false} style={{ display: 'block', maxWidth: 'none', pointerEvents: 'none' }} />
     const inner = b?.wrap ? b.wrap(img, n) : img
     el = b?.onClick
       ? <button type="button" aria-label={b.label || n.n} title={b.label} onClick={() => { fx.tap(); b.onClick!() }} style={{ ...box(n, q, { width: undefined, height: undefined }), padding: 0, border: 0, background: 'none', cursor: 'pointer' }} className="fig-press">{inner}</button>
@@ -202,8 +203,47 @@ function segs(n: FNode) {
   return n.seg!.map(([a, b, style, f, fs], i) => <span key={i} style={{ ...fontOf(n.fn!.split(' ').slice(0, -1).join(' ') + ' ' + style), color: color(f), fontSize: fs }}>{s.slice(a, b)}</span>)
 }
 
-/** Draw one Figma screen. `extra` is placed on top (same 390 x 844 coordinate space). */
-export function Fig({ s, binds = {}, extra, bg }: { s: FNode; binds?: Binds; extra?: ReactNode; bg?: string }) {
+/** Every drawing file a screen needs (so the screen can wait for them and then appear complete). */
+export const urlsOf = (s: FNode, binds: Binds, need: string[]) => {
+  const out: string[] = [...need]
+  const walk = (n: FNode) => {
+    if (n.art) { out.push(artUrl(binds[n.i]?.art || n.i)); if (binds[n.i]?.art) out.push(artUrl(n.i)) }
+    if (n.t === 'INS') { const mc = n.mc || ''; if (mc === 'Back') out.push(artUrl('kit-217:72')); else if (mc === 'Speaker') out.push(artUrl('kit-217:76')); else if (mc === 'LangPill') out.push(artUrl('kit-217:81')) }
+    n.k?.forEach(walk)
+  }
+  s.k?.forEach(walk)
+  return out
+}
+const doneFrames = new Set<string>()
+/** Ready when the fonts and all the screen's drawings have arrived. Already-loaded screens are ready on the very first render. */
+function useScreenReady(id: string, urls: string[], frameId: string): [boolean, number] {
+  const [ready, setReady] = useState(() => doneFrames.has(id) || allWarm(urls))
+  const [p, setP] = useState(0)
+  useEffect(() => {
+    if (ready) { doneFrames.add(id); return }
+    let live = true
+    preloadAll(urls, v => live && setP(v), 8000, frameId).then(() => { doneFrames.add(id); live && setReady(true) })
+    return () => { live = false }
+  }, [id])
+  return [ready, p]
+}
+/** The quiet loading state: a row of dots that fill in as things arrive. It only shows if loading takes more than a moment. */
+function LoadDots({ p, w, h }: { p: number; w: number; h: number }) {
+  const n = 7
+  return (
+    <div role="status" aria-label="Loading" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, animation: 'figfade .25s ease .3s both', pointerEvents: 'none' }}>
+      {Array.from({ length: n }, (_, i) => { const on = p > (i + 0.5) / n; return <span key={i} style={{ width: 14, height: 14, borderRadius: '50%', border: '2.4px solid #00224E', background: on ? '#00224E' : 'transparent', transform: on ? 'scale(1.12)' : 'scale(.86)', transition: 'background .12s, transform .2s cubic-bezier(.3,1.6,.5,1)' }} /> })}
+    </div>
+  )
+}
+
+/** Draw one Figma screen. `extra` is placed on top (same 390 x 844 coordinate space).
+    The screen appears only once its drawings and the fonts are all here, so it never shows half drawn and its animations start on a complete screen.
+    `need`: extra drawing URLs (for art that is drawn later by a bind) to wait for too. */
+export function Fig({ s, binds = {}, extra, bg, need = [] }: { s: FNode; binds?: Binds; extra?: ReactNode; bg?: string; need?: string[] }) {
+  const urls = useMemo(() => urlsOf(s, binds, need), [s.i, need.join('|')])
+  const [ready, p] = useScreenReady(s.i + '|' + need.join('|'), urls, s.i)
+  if (!ready) return <div className="fig-root" style={{ position: 'relative', isolation: 'isolate', width: s.w, height: s.h, background: bg || color(s.f), overflow: 'hidden' }}><LoadDots p={p} w={s.w} h={s.h} /></div>
   return (
     <C.Provider value={{ binds }}>
       <div className="fig-root" style={{ position: 'relative', isolation: 'isolate', width: s.w, height: s.h, background: bg || color(s.f), overflow: 'hidden' }}>
@@ -224,9 +264,9 @@ export function findNode(s: FNode, id: string): FNode | undefined {
    The Figma drawing is loaded as text and adjusted (a fill colour swapped, a knob moved),
    so the selected look is the same drawing, never a new one. */
 const svgCache = new Map<string, Promise<string>>()
-const loadSvg = (id: string) => { const u = figArt(id); if (!svgCache.has(u)) svgCache.set(u, fetch(u).then(r => r.text())); return svgCache.get(u)! }
+const loadSvg = (id: string) => { const u = figArt(id); if (!svgCache.has(u)) svgCache.set(u, svgText.has(u) ? Promise.resolve(svgText.get(u)!) : fetch(u).then(r => r.text()).then(x => { svgText.set(u, x); return x })); return svgCache.get(u)! }
 export function SvgMod({ id, mod, style }: { id: string; mod?: (svg: string) => string; style?: CSSProperties }) {
-  const [svg, setSvg] = useState('')
+  const [svg, setSvg] = useState(() => svgText.get(figArt(id)) || '') // straight from the cache when the drawing is already loaded
   React.useEffect(() => { let live = true; loadSvg(id).then(t => live && setSvg(t)); return () => { live = false } }, [id])
   const uid = React.useId().replace(/:/g, '')
   const out = svg ? (mod ? mod(svg) : svg).replace(/(id="|url\(#)([^")]+)/g, `$1${uid}$2`) : ''

@@ -8,6 +8,7 @@ import { fx } from '../ds/fx'
 import DATA from './fig.json'
 import { Hanging, peek } from '../fig/mascot'
 import { ScoreDial, StepHop, BuildOverlay, ToolOverlay } from '../fig/extras'
+import { fileUrl } from '../fig/preload'
 import { TimeWheel, Sun, SLOT_START, slotShort, slotRange, goneToday } from './wheel'
 import { store, State, roomCode, nameFrom, IITR, initial, firstName, emptyDraft, code4, active, pushAlert, setReq, ago, stamp, Req } from './store'
 
@@ -17,7 +18,9 @@ type Ctx = { nav: NavApi<Screen> }
 export const AppCtx = createContext<Ctx>(null!)
 const useNav = () => useContext(AppCtx).nav
 const D = DATA as unknown as Record<string, FNode>
-const F = ({ id, binds, extra, bg }: { id: string; binds?: Binds; extra?: ReactNode; bg?: string }) => <Fig s={D[id]} binds={binds} extra={extra} bg={bg} />
+const F = ({ id, binds, extra, bg, need }: { id: string; binds?: Binds; extra?: ReactNode; bg?: string; need?: string[] }) => <Fig s={D[id]} binds={binds} extra={extra} bg={bg} need={need} />
+/** Every drawing in the app, for the quiet background loading that starts once the first screen is up. */
+export const allFrames = () => Object.values(D)
 const useS = () => store.use(s => s)
 const back = (nav: NavApi<Screen>) => ({ onClick: () => nav.back(), label: 'Back' })
 /** Swing a group of loose layers as one notice board hung on a pin at (px, py). */
@@ -235,6 +238,9 @@ const FIX: Record<string, { hero: string; tiles: string[] }> = {
   Corridor: { hero: 'light', tiles: ['light-1', 'fan', 'switch-1'] }, Stairs: { hero: 'stairs', tiles: ['stairs-1', 'light-1', 'stairs-2'] },
   'Common room': { hero: 'lamp', tiles: ['fan', 'light-1', 'switch-1'] },
 }
+/** The picture files of one item (so its screen waits for them), and of all items (for the background loading). */
+export const fixFiles = (key: string) => { const f = FIX[key]; return f ? [`fix-${f.hero}-hero`, ...f.tiles.filter(t => t !== 'fan').map(t => `fix-${t}`)] : [] }
+export const allFixFiles = () => [...new Set(Object.keys(FIX).flatMap(fixFiles))]
 const fitSvg = (svg: string) => svg.replace(/^(<svg [^>]*?) width="\d+" height="\d+"/, '$1 width="100%" height="100%"')
 export function Doing() {
   const nav = useNav(); const s = useS(); const t = thing(s); const d = s.draft; const code = roomCode(s)
@@ -273,7 +279,7 @@ export function Doing() {
       : pic ? { render: () => <SvgMod id={pic === 'fan' ? '226:239' : `fix:${pic}`} mod={svg => fitSvg(on ? svg.replace(/#FFD265/g, '#FFFBF3') : svg)} style={{ width: 106, height: 84, padding: '8px 12px 2px', boxSizing: 'border-box' }} />, wrap: (el: ReactNode) => <PopIn delay={0.25 + i * 0.1}>{el}</PopIn>, style: { pointerEvents: 'none' } }
       : { hide: true }
   }
-  return <F id="226:215" binds={binds} />
+  return <F id="226:215" binds={binds} need={fixFiles(d.item).map(fileUrl)} />
 }
 
 export function Safety() {

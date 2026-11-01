@@ -2,3 +2,5 @@ node_modules
 dist
 .env
 tools/mascot-refs/poses/
+public/fig/_b/
+tsconfig.tsbuildinfo

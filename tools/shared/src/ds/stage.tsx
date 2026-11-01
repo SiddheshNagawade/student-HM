@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Volume2, VolumeX, RotateCcw, MapPin, FlaskConical } from './icons'
 import { setMuted, useMuted, fx } from './fx'
 import { cx, Tooltip } from './ui'
+import { useViewport, useKeepFocusVisible, VP } from './viewport'
 
 const Framed = createContext(false)
 export const useFramed = () => useContext(Framed)
@@ -17,19 +18,28 @@ function useWide() {
   useEffect(() => { const m = matchMedia(q); const f = () => setW(m.matches); m.addEventListener('change', f); return () => m.removeEventListener('change', f) }, [])
   return w
 }
-function useScale() {
-  const [s, setS] = useState(1)
-  useEffect(() => { const f = () => setS(Math.min(1, (innerHeight - 48) / 844)); f(); addEventListener('resize', f); return () => removeEventListener('resize', f) }, [])
-  return s
+/** On a laptop the device is as big as the window allows (room is left for the side panel), from a little smaller up to 1.5 times. */
+function useScale(vh: number, vw: number) {
+  return Math.max(0.5, Math.min(1.5, (vh - 48) / 844, (vw - 96 - 348) / 390))
 }
 
-/** On a phone the 390 x 844 Figma frame is scaled to fit the screen exactly. */
-function MobileFit({ bg, children }: { bg: string; children: ReactNode }) {
-  const [k, setK] = useState(1)
-  useEffect(() => { const f = () => setK(Math.min(innerWidth / 390, innerHeight / 844)); f(); addEventListener('resize', f); return () => removeEventListener('resize', f) }, [])
+/** The 390 x 844 Figma frame, always kept whole and never stretched, in every window:
+    - laptop: a rounded device in the middle (the side panel sits next to it)
+    - phone, upright: scaled to fit the screen exactly
+    - phone turned sideways or a very short window: not shrunk to a stamp; it keeps a readable size and you scroll up and down
+    - keyboard open: the visible area is exactly what the keyboard leaves, the frame keeps its width, and the field you are typing in scrolls into view
+    One tree for all of these, so the screen (and what you typed) survives a rotate or a resize. */
+function PhoneBox({ wide, bg, scale, vp, children }: { wide: boolean; bg: string; scale: number; vp: VP; children: ReactNode }) {
+  useKeepFocusVisible()
+  const fit = Math.min(vp.w / 390, vp.h / 844)
+  const roomy = !vp.kb && fit >= 0.78
+  const k = wide ? scale : vp.kb ? Math.min(vp.w / 390, 1.3) : roomy ? fit : Math.min(vp.w / 390, 1)
+  const scrolls = !wide && !roomy
   return (
-    <div className="fixed inset-0 flex items-center justify-center overflow-hidden" style={{ background: bg }}>
-      <div style={{ width: 390 * k, height: 844 * k }}><div className="relative origin-top-left overflow-hidden" style={{ width: 390, height: 844, transform: `scale(${k})` }}>{children}</div></div>
+    <div style={wide ? { display: 'contents' } : { position: 'fixed', left: 0, right: 0, top: vp.top, height: vp.h, background: bg, overflowX: 'hidden', overflowY: scrolls ? 'auto' : 'hidden', display: 'flex', justifyContent: 'center', alignItems: scrolls ? 'flex-start' : 'center', overscrollBehavior: 'contain' }}>
+      <div className="shrink-0" style={{ width: 390 * k, height: 844 * k }}>
+        <div className={cx('relative origin-top-left overflow-hidden', wide && 'rounded-[48px] shadow-phone')} style={{ width: 390, height: 844, transform: `scale(${k})`, background: bg }}>{children}</div>
+      </div>
     </div>
   )
 }
@@ -38,11 +48,10 @@ export type SimAction = { label: string; sub?: string; run: () => void }
 export function PhoneStage({ app, tagline, accent = '#FFD265', groups, current, onJump, onRestart, children, bg = '#FFFBF3', sim = [] }: {
   app: string; tagline: string; accent?: string; groups: ScreenGroup[]; current: string; onJump: (id: string) => void; onRestart: () => void; children: ReactNode; bg?: string; sim?: SimAction[]
 }) {
-  const wide = useWide(); const scale = useScale(); const muted = useMuted()
-  if (!wide) return <MobileFit bg={bg}>{children}</MobileFit>
+  const wide = useWide(); const vp = useViewport(); const scale = useScale(vp.h, vp.w); const muted = useMuted()
   return (
-    <div className="fixed inset-0 flex items-center justify-center gap-12 bg-[#EDE4CF] p-6">
-      <aside className="flex h-full max-h-[844px] w-[300px] shrink-0 flex-col">
+    <div className={wide ? 'fixed inset-0 flex items-center justify-center gap-12 bg-[#EDE4CF] p-6' : 'contents'}>
+      {wide && <aside className="flex h-full max-h-[844px] w-[300px] shrink-0 flex-col">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-[12px] border-2 border-navy font-head text-[24px] font-extrabold" style={{ background: accent }}><span className="pt-1">A</span></span>
           <div><div className="font-head text-[22px] font-extrabold leading-none">ALIGN</div><div className="mt-1 text-[14px] font-semibold text-mid">{app}</div></div>
@@ -90,12 +99,8 @@ export function PhoneStage({ app, tagline, accent = '#FFD265', groups, current, 
             </div>
           ))}
         </nav>
-      </aside>
-      <div style={{ width: 390 * scale, height: 844 * scale }} className="shrink-0">
-        <div className="relative origin-top-left overflow-hidden rounded-[48px] shadow-phone" style={{ width: 390, height: 844, transform: `scale(${scale})`, background: bg }}>
-          <Framed.Provider value={true}>{children}</Framed.Provider>
-        </div>
-      </div>
+      </aside>}
+      <PhoneBox wide={wide} bg={bg} scale={scale} vp={vp}><Framed.Provider value={wide}>{children}</Framed.Provider></PhoneBox>
     </div>
   )
 }

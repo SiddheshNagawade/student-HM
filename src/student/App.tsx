@@ -1,8 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNav, Stage } from '../ds/nav'
 import { PhoneStage, ScreenGroup, SimAction } from '../ds/stage'
-import { AppCtx, ALL, Screen } from './screens'
-import { PeekHost, OfflineBuddy, peek } from '../fig/mascot'
+import { AppCtx, ALL, Screen, allFrames, allFixFiles } from './screens'
+import { PeekHost, OfflineBuddy, peek, preloadMascot } from '../fig/mascot'
+import { prefetchBundles, fileUrl } from '../fig/preload'
+
+// once the first screen is up, quietly fetch every other screen's packed drawings (one request each), so later screens appear whole at once
+const BACKGROUND = ['build-1', 'build-2', 'build-3', 'build-log', 'tool-wrench', 'tool-bolt', 'tool-bulb0', 'tool-bulb1']
+function warmEverything() { prefetchBundles(allFrames().map(f => f.i), [...BACKGROUND, ...allFixFiles()].map(fileUrl)); setTimeout(() => preloadMascot(), 1500) }
 import { store, active, setReq, pushAlert, code4, workTime } from './store'
 
 const GROUPS: ScreenGroup[] = [
@@ -46,6 +51,7 @@ function Inner() {
   const nav = useNav<Screen>(start === 'home' && !active(s0) ? 'homeEmpty' : start, 'push')
   const s = store.use(x => x)
   const [, force] = useState(0)
+  useEffect(() => { warmEverything() }, [])
   useEffect(() => { const u = () => store.set({ online: true }), d = () => store.set({ online: false }); addEventListener('online', u); addEventListener('offline', d); return () => { removeEventListener('online', u); removeEventListener('offline', d) } }, [])
 
   const r = active(s)

@@ -78,5 +78,11 @@ Shared file (master in `student-hm/tools/shared/src/fig/`), plays once, never an
 - Supervisor page: fills any window (rail pinned left, desk centred in the room left over); the logo turns into a sidebar toggle on hover and the rail opens with labels (state kept in localStorage lign.sup.rail, shortcut Shift+Ctrl/Cmd+S).
 - Tool loaders (ToolLoader / ToolOverlay in src/fig/extras.tsx, parts 	ool-*.svg, pen sketches): rocket screwdriver = supervisor confirms (Accept and assign, Merge, Escalate, Reassign, Save rules, via usy() in the supervisor Ctx); wrench and bolt = student sends to supervisor, books a new slot, joins a report; bulb = student code check and technician PIN. Timing is by hand in rAF (clamp the clock to >= 0: the first frame can be before t0).
 
+## Loading and fitting (done)
+- A screen never shows half drawn: `Fig` waits for the fonts and all its drawings (`src/fig/preload.ts`), shows a quiet row of dots only if that takes more than a moment, then mounts, so its one-time animations start on a complete screen. Art drawn later by a bind is passed in `need`.
+- One request per screen: `scripts/make-bundles.cjs` (runs as npm `prebuild`) packs each screen's drawings into `public/fig/_b/<frame>.json` (git-ignored). Without a build (dev server) it falls back to one request per drawing. After the first screen, the other screens' bundles are fetched in idle time (skipped on data saver / 2g). `vercel.json` sets cache headers.
+- Fitting: `src/ds/viewport.ts` (`useViewport`) tracks the real visible area incl. the on-screen keyboard; `PhoneBox` in `src/ds/stage.tsx` keeps one tree for laptop, phone, rotated phone and keyboard-open (the frame keeps its width and scrolls, the focused field scrolls into view). Laptop device scales 0.5 to 1.5. The supervisor does the same in `useFit`.
+- Shared code lives in `student-hm/tools/shared`; `node tools/sync-and-check.cjs` copies it into all three apps and builds them; `node tools/ship.cjs "message"` commits and pushes all three.
+
 ## Checking work
 Build: `npx vite build`; preview: `npx vite preview --port 4301`. Use Playwright (390x844 for phone apps, 1440x900 for the desk) to screenshot every screen and catch console errors before pushing. Compare against Figma screenshots when layout changes.

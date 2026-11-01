@@ -6,6 +6,7 @@
 import { ReactNode, useEffect, useRef, useState } from 'react'
 import { animate, useReducedMotion } from 'framer-motion'
 import { fx } from '../ds/fx'
+import { useAssets } from './preload'
 
 const NAVY = '#00224E', CREAM = '#FFFBF3', YELLOW = '#FFD265', BRICK = '#B8530A'
 
@@ -107,9 +108,11 @@ const SLOTS = [[205, 270], [257, 270], [309, 270], [231, 241], [283, 241], [257,
 export function BuilderLoader({ ms = 3600, scale = 1, onDone, sound = true }: { ms?: number; scale?: number; onDone?: () => void; sound?: boolean }) {
   const reduce = useReducedMotion()
   const [t, setT] = useState(reduce ? ms : 0)
+  const ready = useAssets([...BUILD, LOG]) // the clock starts only when every picture is here
   const done = useRef(false); const hits = useRef(0)
   const HIT = 6, LEAD = 380, TAIL = 520, step = (ms - LEAD - TAIL) / HIT
   useEffect(() => {
+    if (!ready) return
     if (reduce) { const k = setTimeout(() => onDone?.(), 500); return () => clearTimeout(k) }
     const t0 = performance.now(); let raf = 0
     const tick = (now: number) => {
@@ -121,7 +124,8 @@ export function BuilderLoader({ ms = 3600, scale = 1, onDone, sound = true }: { 
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [])
+  }, [ready])
+  if (!ready) return <div style={{ width: 360 * scale, height: 300 * scale }} />
   const k = Math.floor((t - LEAD) / step), within = ((t - LEAD) - k * step) / step // which hit, and how far into it (0 to 1)
   const building = t >= LEAD && k < HIT
   const finished = t >= LEAD + HIT * step
@@ -178,8 +182,10 @@ export function ToolLoader({ kind, ms, onDone, scale = 1, sound = true }: { kind
   const [t, setT] = useState(reduce ? 1 : 0) // 0 to 1 over the whole run
   const box = useRef<HTMLDivElement>(null); const [W, setW] = useState(390)
   const flags = useRef({ done: false, n: 0 })
+  const ready = useAssets(kind === 'rocket' ? [TOOL('driver'), TOOL('flame')] : kind === 'wrench' ? [TOOL('bolt'), TOOL('wrench')] : [TOOL('bulb0'), TOOL('bulb1')]) // the clock starts only when the pictures are here
   useEffect(() => { if (box.current) setW(box.current.offsetWidth || 390) }, [])
   useEffect(() => {
+    if (!ready) return
     if (reduce) { const k = setTimeout(() => onDone?.(), 450); return () => clearTimeout(k) }
     if (sound && kind === 'rocket') fx.swoosh()
     const t0 = performance.now(); let raf = 0
@@ -190,7 +196,8 @@ export function ToolLoader({ kind, ms, onDone, scale = 1, sound = true }: { kind
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [])
+  }, [ready])
+  if (!ready) return <div ref={box} style={{ width: '100%', height: kind === 'rocket' ? 220 * scale : 10 }} />
   const tickOnce = (n: number) => { if (sound && flags.current.n < n) { flags.current.n = n; fx.tick(n % 6) } }
 
   if (kind === 'rocket') {

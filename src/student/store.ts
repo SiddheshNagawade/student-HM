@@ -5,10 +5,11 @@ export type Stage = 0 | 1 | 2 | 3 | 4 | 5 // reported, verified, scheduled, on t
 export type Req = {
   id: string; item: string; issue: string; trade: string; where: string; at: number; stage: Stage
   tech: string; techTrade: string; slot: string; day: string; code: string; part?: string; letIn: boolean
-  stars?: number; tags?: string[]; note?: string; fix?: string; closedAt?: number; tries: number; missed: number; reopened?: boolean
+  stars?: number; tags?: string[]; note?: string; issues?: string[]; times?: string[]; fix?: string; closedAt?: number; tries: number; missed: number; reopened?: boolean
 }
 export type Alert = { id: string; title: string; sub: string; at: number; reqId?: string; kind: 'near' | 'photo' | 'part' | 'sent' | 'closed' | 'checked' }
-export type Draft = { item: string; trade: string; issue: string; issues: string[]; photo: string | false; place: string; floor: string; dayIx: number; slotIx: number; letIn: boolean; danger: boolean; dupe?: string }
+export type Draft = { item: string; trade: string; issue: string; issues: string[]; photo: string | false; place: string; floor: string; dayIx: number; slotIx: number; letIn: boolean; danger: boolean; dupe?: string
+  others: string[]; note: string; times: { d: number; s: number }[] }
 
 export type State = {
   signedIn: boolean; email: string; name: string; hostel: string; block: string; floor: string; room: string
@@ -19,7 +20,7 @@ export type State = {
 const n = Date.now()
 /* Default usual free hours, exactly as drawn in the Figma (Mon..Sun x Morning, Afternoon, Evening, Night). */
 const HOURS = [[0, 0, 1, 0], [0, 0, 1, 1], [0, 1, 1, 0], [0, 0, 1, 0], [0, 0, 1, 1], [1, 1, 1, 0], [0, 1, 1, 0]].map(r => r.map(Boolean))
-export const emptyDraft = (): Draft => ({ item: '', trade: '', issue: '', issues: [], photo: false, place: '', floor: '', dayIx: 0, slotIx: 0, letIn: false, danger: false })
+export const emptyDraft = (): Draft => ({ item: '', trade: '', issue: '', issues: [], photo: false, place: '', floor: '', dayIx: 0, slotIx: 0, letIn: false, danger: false, others: [], note: '', times: [] })
 
 const seed = (): State => ({
   signedIn: false, email: '', name: '', hostel: 'Himalaya Bhawan', block: 'B', floor: 'G', room: '04',
@@ -29,7 +30,7 @@ const seed = (): State => ({
   ],
   alerts: [],
 })
-export const store = createStore<State>('align.student.fig.v2', seed)
+export const store = createStore<State>('align.student.fig.v3', seed)
 
 export const roomCode = (s: Pick<State, 'block' | 'floor' | 'room'>) => `${(s.block || 'B').toUpperCase()}${(s.floor || 'G').toUpperCase()}${(s.room || '04').padStart(2, '0')}`
 export const firstName = (name: string) => (name || 'Siddhi').split(' ')[0]

@@ -48,10 +48,27 @@ export const THINGS: Record<string, Thing> = {
   'Common room': { item: 'Common room', trade: 'Electrical', issues: ['Fan not working', 'Light not working', 'Socket broken'], verb: 'fixed', tech: RAVI },
 }
 const thing = (s: State) => THINGS[s.draft.item] || THINGS.fan
+/* Who comes depends on WHAT is wrong, not on where it is: a dead light on the stairs is an electrician's job, a loose railing is the mason's.
+   Each problem (a tile the student tapped, or words they typed) is matched to a trade; the first one decides who is sent. */
+type Trade = Thing['trade']
+const TRADE_WORDS: [RegExp, Trade][] = [
+  [/tap|leak|water|flush|drain|pipe|geyser|toilet|smell|overflow/i, 'Plumbing'],
+  [/light|fan|switch|socket|power|spark|wire|bulb|tube|buzz|flicker|regulator|choke|plug|shock/i, 'Electrical'],
+  [/door|window|lock|bed|table|chair|hinge|latch|drawer|slat|wobbl|leg|glass|jam|almirah|shelf|mesh/i, 'Carpentry'],
+  [/railing|step|stair|wall|ceiling|floor|tile|crack|seepage|plaster|damp|paint|roof/i, 'Civil'],
+]
+const TRADE_TECH: Record<Trade, [string, string]> = { Electrical: RAVI, Plumbing: IMRAN, Carpentry: DEEPAK, Civil: MAHESH }
+const tradeOfIssue = (issue: string, fallback: Trade): Trade => TRADE_WORDS.find(([re]) => re.test(issue))?.[1] || fallback
+const allIssues = (d: { issue: string; issues?: string[]; others?: string[] }) => { const a = [...(d.issues || []), ...(d.others || [])]; return a.length ? a : d.issue ? [d.issue] : [] }
+const whoComes = (d: { issue: string; issues?: string[]; others?: string[] }, base: Trade) => { const trade = tradeOfIssue(allIssues(d)[0] || '', base); return { trade, tech: TRADE_TECH[trade] } }
 
 /* ---------- time helpers ---------- */
 const DAYS = (() => { const out: { label: string; num: string; long: string }[] = []; for (let i = 0; i < 4; i++) { const d = new Date(Date.now() + i * 86400000); out.push({ label: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString('en-IN', { weekday: 'short' }), num: String(d.getDate()), long: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) }) } return out })()
 const SLOTS = SLOT_START.map((_, i) => [slotShort(i), slotRange(i)])
+/** One chosen time as short words: "Tomorrow · 11:00 AM". */
+const timeWords = (t: { d: number; s: number }) => `${DAYS[t.d].label} · ${slotShort(t.s)} ${SLOT_START[t.s] < 720 ? 'AM' : 'PM'}`
+const earliest = (ts: { d: number; s: number }[]) => [...ts].sort((a, b) => a.d - b.d || a.s - b.s)[0]
+const pill: React.CSSProperties = { height: 30, boxSizing: 'border-box', borderRadius: 12, border: '2px solid #00224E', background: '#FFFFFF', padding: '0 10px', font: '500 13px/16px "M PLUS Rounded 1c", sans-serif', color: '#00224E', outline: 'none' }
 /* The free-hours grid keeps its four Figma columns; they are the four blocks of the technicians' day (10 AM to 6 PM). */
 const PERIOD = ['10–12', '12–2', '2–4', '4–6']
 const PERIOD_LONG = ['10 to 12 in the morning', '12 to 2 in the afternoon', '2 to 4 in the afternoon', '4 to 6 in the evening']
@@ -245,6 +262,12 @@ export const allFixFiles = () => [...new Set(Object.keys(FIX).flatMap(fixFiles))
 const fitSvg = (svg: string) => svg.replace(/^(<svg [^>]*?) width="\d+" height="\d+"/, '$1 width="100%" height="100%"')
 export function Doing() {
   const nav = useNav(); const s = useS(); const t = thing(s); const d = s.draft; const code = roomCode(s)
+  const picked = d.issues || [], others = d.others || []
+  const [more, setMore] = useState('')
+  // everything the student says is wrong: the tiles they tapped and the problems they typed in themselves (the first one is also kept as `issue`)
+  const setIssues = (issues: string[], oth: string[]) => store.set(x => ({ draft: { ...x.draft, issues, others: oth, issue: issues[0] || oth[0] || '' } }))
+  const addOther = () => { const v = more.trim(); if (!v) return; if (others.length >= 3) { fx.error(); return } fx.select(); setIssues(picked, [...others, v.slice(0, 40)]); setMore('') }
+  const any = picked.length + others.length > 0
   const where = d.place ? `${d.place} · ${d.floor === 'G' ? 'Ground' : 'Floor ' + d.floor}` : code
   const tiles: [string, string, string, number][] = [['226:238', '226:253', '226:239', 0], ['226:254', '226:270', '226:255', 1], ['226:271', '226:287', '226:272', 2]]
   const isFan = d.item === 'fan'
@@ -256,7 +279,7 @@ export function Doing() {
     // the tile opens the camera (a phone) or the file chooser (a laptop); the picture then sits in the tile, and a tap on it takes it away again
     '226:288': { onClick: () => { if (d.photo) { fx.deselect(); store.set(x => ({ draft: { ...x.draft, photo: false } })); return } takePhoto().then(p => { if (p) { fx.shutter(); store.set(x => ({ draft: { ...x.draft, photo: p } })) } }) }, label: d.photo ? 'Remove the photo' : 'Add a photo' },
     '226:289': d.photo ? { render: () => <Shot src={d.photo as string} w={52} h={52} r={14} style={{ marginLeft: -13, marginTop: -13, boxShadow: 'none' }} />, style: { pointerEvents: 'none', overflow: 'visible' } } : { style: { pointerEvents: 'none' } },
-    '226:293': { text: d.photo ? 'Photo added' : 'Add a photo, if you like' }, '226:294': d.photo ? { text: 'Tap the photo to remove it' } : { hide: true },
+    '226:293': { hide: true }, '226:294': { hide: true },
     '226:296': { text: `You are usually free ${usualFree(s)}` },
     '226:223': isFan ? { wrap: el => <SpinDown cx={195} cy={214}>{el}</SpinDown> } : fix ? {
       render: () => (
@@ -269,11 +292,11 @@ export function Doing() {
         </div>
       ),
     } : { hide: true },
-    '226:297': { onClick: () => { if (!d.issue) { fx.error(); return } t.trade === 'Electrical' ? nav.go('safety') : nav.go('slot') }, style: { opacity: d.issue ? 1 : 0.55 } },
+    '226:297': { onClick: () => { if (!any) { fx.error(); return } allIssues(d).some(i => tradeOfIssue(i, t.trade) === 'Electrical') ? nav.go('safety') : nav.go('slot') }, style: { opacity: any ? 1 : 0.55 } },
   }
   for (const [frame, label, art, i] of tiles) {
-    const on = d.issue === t.issues[i]
-    binds[frame] = { onClick: () => { fx.select(); store.set(x => ({ draft: { ...x.draft, issue: t.issues[i] } })) }, style: { background: on ? '#FFD265' : '#FFFBF3', boxShadow: on ? '3px 4px 0 #00224E' : 'none' }, label: t.issues[i] }
+    const on = picked.includes(t.issues[i]) // more than one can be tapped
+    binds[frame] = { onClick: () => { on ? fx.deselect() : fx.select(); setIssues(on ? picked.filter(p => p !== t.issues[i]) : [...picked, t.issues[i]], others) }, style: { background: on ? '#FFD265' : '#FFFBF3', boxShadow: on ? '3px 4px 0 #00224E' : 'none' }, label: t.issues[i] }
     // two-line labels sit centred inside the tile, never over its edge
     binds[label] = { text: t.issues[i], style: { left: 0, top: 92, width: 106, height: 36, padding: '0 7px', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', whiteSpace: 'normal', fontSize: 13, lineHeight: '15px', overflow: 'hidden' } }
     const pic = fix?.tiles[i]
@@ -281,7 +304,17 @@ export function Doing() {
       : pic ? { render: () => <SvgMod id={pic === 'fan' ? '226:239' : `fix:${pic}`} mod={svg => fitSvg(on ? svg.replace(/#FFD265/g, '#FFFBF3') : svg)} style={{ width: 106, height: 84, padding: '8px 12px 2px', boxSizing: 'border-box' }} />, wrap: (el: ReactNode) => <PopIn delay={0.25 + i * 0.1}>{el}</PopIn>, style: { pointerEvents: 'none' } }
       : { hide: true }
   }
-  return <F id="226:215" binds={binds} need={fixFiles(d.item).map(fileUrl)} />
+  const extra = (
+    <>
+      <input value={d.note || ''} maxLength={140} onChange={e => store.set(x => ({ draft: { ...x.draft, note: e.target.value } }))} placeholder="Describe it for the technician" aria-label="Describe the problem" style={{ ...pill, position: 'absolute', left: 92, top: 662, width: 274 }} />
+      <input value={more} maxLength={40} onChange={e => setMore(e.target.value)} onKeyDown={e => e.key === 'Enter' && addOther()} placeholder="Another problem?" aria-label="Add another problem" style={{ ...pill, position: 'absolute', left: 92, top: 696, width: 220 }} />
+      <button type="button" onClick={addOther} aria-label="Add this problem" className="fig-press" style={{ ...pill, position: 'absolute', left: 318, top: 696, width: 48, padding: 0, background: more.trim() ? '#FFD265' : '#FFFBF3', fontWeight: 700, cursor: 'pointer' }}>Add</button>
+      {others.length > 0 && <div style={{ position: 'absolute', left: 24, top: 734, width: 342, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {others.map((o, i) => <button key={o + i} type="button" onClick={() => { fx.deselect(); setIssues(picked, others.filter((_, k) => k !== i)) }} aria-label={`Remove ${o}`} className="fig-press" style={{ ...pill, height: 28, background: '#FFD265', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', maxWidth: 160, overflow: 'hidden', whiteSpace: 'nowrap' }}><span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{o}</span><span aria-hidden="true">×</span></button>)}
+      </div>}
+    </>
+  )
+  return <F id="226:215" binds={binds} extra={extra} need={fixFiles(d.item).map(fileUrl)} />
 }
 
 export function Safety() {
@@ -319,19 +352,28 @@ export function Slot() {
   useEffect(() => { if (d.dayIx === 0 && todayFull) store.set(x => ({ draft: { ...x.draft, dayIx: 1 } })); else if (off(d.slotIx)) store.set(x => ({ draft: { ...x.draft, slotIx: firstOk(x.draft.slotIx) } })) }, [d.dayIx])
   const usual = () => {
     const dow = (new Date().getDay() + 6) % 7
-    for (let k = 0; k < 4; k++) { const day = (dow + k) % 7; const p = s.hours[day].findIndex(Boolean); if (p >= 0 && !(k === 0 && goneToday(PERIOD_SLOT[p]))) { fx.select(); store.set(x => ({ draft: { ...x.draft, dayIx: k, slotIx: PERIOD_SLOT[p] } })); return } }
+    for (let k = 0; k < 4; k++) { const day = (dow + k) % 7; const p = s.hours[day].findIndex(Boolean); if (p >= 0 && !(k === 0 && goneToday(PERIOD_SLOT[p]))) { fx.select(); store.set(x => ({ draft: { ...x.draft, dayIx: k, slotIx: PERIOD_SLOT[p], times: addTime(x.draft.times || [], k, PERIOD_SLOT[p]) } })); return } }
     fx.error()
   }
+  // the student can give several times (several on one day, and on several days) so the technician can pick what suits his round
+  const times = d.times || []
+  const has = times.some(t => t.d === d.dayIx && t.s === d.slotIx)
+  const toggleTime = () => {
+    if (off(d.slotIx)) { fx.error(); return }
+    if (has) { fx.deselect(); store.set(x => ({ draft: { ...x.draft, times: times.filter(t => !(t.d === d.dayIx && t.s === d.slotIx)) } })) }
+    else if (times.length >= 8) fx.error()
+    else { fx.select(); store.set(x => ({ draft: { ...x.draft, times: addTime(times, d.dayIx, d.slotIx) } })) }
+  }
+  const next = () => { const ts = times.length ? times : [{ d: d.dayIx, s: d.slotIx }]; const e = earliest(ts); store.set(x => ({ draft: { ...x.draft, times: ts, dayIx: e.d, slotIx: e.s } })); nav.go(d.place === 'Washroom' && /leak/i.test(d.issue) ? 'dupe' : 'review') }
   const binds: Binds = {
     '226:497': back(nav),
     '226:446': { render: () => <RiseIn y={30} dur={0.9}><Sun at={SLOT_START[d.slotIx]} /></RiseIn> },
     '226:427': { hide: true },
     ...Object.fromEntries(['226:429', '226:433', '226:437', '226:441', '226:432', '226:436', '226:440', '226:444'].map(i => [i, { hide: true }])),
     '226:445': { hide: true },
-    '226:489': { text: `The warden opens ${code}` },
-    '226:482': { onClick: () => { fx[d.letIn ? 'toggleOff' : 'toggleOn'](); store.set(x => ({ draft: { ...x.draft, letIn: !x.draft.letIn } })) }, label: 'Let them in if I am out', render: () => <SvgMod id="226:482" mod={svg => toggleSvg(svg, d.letIn, 'M276 41')} /> },
+    '226:482': { hide: true }, '226:488': { hide: true }, '226:489': { hide: true },
     '226:490': { onClick: usual },
-    '226:500': { onClick: () => nav.go(d.place === 'Washroom' && /leak/i.test(d.issue) ? 'dupe' : 'review') },
+    '226:500': { onClick: next },
   }
   dayArts.forEach((id, i) => {
     const on = d.dayIx === i
@@ -341,8 +383,21 @@ export function Slot() {
     binds[dayTexts[i][1]] = { text: DAYS[i].num, style: { pointerEvents: 'none', opacity: dead ? 0.45 : 1 } }
   })
   const wheel = <TimeWheel key={d.dayIx} value={d.slotIx} disabled={off} onChange={i => store.set(x => ({ draft: { ...x.draft, slotIx: i } }))} />
-  return <F id="226:419" binds={binds} extra={wheel} />
+  const panel = (
+    <div style={{ position: 'absolute', left: 24, top: 494, width: 342, height: 108, boxSizing: 'border-box', borderRadius: 18, border: '2.5px solid #00224E', background: '#FFFBF3', padding: '10px 12px', zIndex: 2 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ font: '700 14px/18px "M PLUS Rounded 1c", sans-serif', color: '#00224E' }}>{times.length ? `${times.length} time${times.length > 1 ? 's' : ''} suit you` : 'Times that suit you'}</div>
+        <button type="button" onClick={toggleTime} className="fig-press" style={{ ...pill, height: 30, background: has ? '#FFFBF3' : '#FFD265', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{has ? 'Remove this time' : '+ Add this time'}</button>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8, maxHeight: 54, overflow: 'hidden' }}>
+        {times.length === 0 && <span style={{ font: '500 12.5px/16px "M PLUS Rounded 1c", sans-serif', color: '#3E4F72' }}>The technician picks the best one for his round. The more you give, the sooner he can come.</span>}
+        {times.map(t => <button key={t.d + '-' + t.s} type="button" onClick={() => { fx.tick(t.s % 6); store.set(x => ({ draft: { ...x.draft, dayIx: t.d, slotIx: t.s } })) }} aria-label={`Show ${timeWords(t)} on the clock`} className="fig-press" style={{ ...pill, height: 24, padding: '0 8px', fontSize: 12, background: t.d === d.dayIx && t.s === d.slotIx ? '#FFD265' : '#FFFFFF', cursor: 'pointer' }}>{timeWords(t)}</button>)}
+      </div>
+    </div>
+  )
+  return <F id="226:419" binds={binds} extra={<>{wheel}{panel}</>} />
 }
+const addTime = (ts: { d: number; s: number }[], d: number, s: number) => (ts.some(t => t.d === d && t.s === s) ? ts : [...ts, { d, s }])
 const toggleSvg = (svg: string, on: boolean, dot: string) => !on ? svg : setFill(svg, 1, '#FFD265').replace(new RegExp(`<path d="${dot}[^>]*/>`), m => `<g transform="translate(26 0)">${m}</g>`)
 const cap = (x: string) => x[0].toUpperCase() + x.slice(1)
 const swapTo = (svg: string, from: string, to: string) => { let done = false; return svg.replace(new RegExp(`fill="${from}"`, 'g'), m => { if (done) return m; done = true; return `fill="${to}"` }) }
@@ -351,10 +406,13 @@ export function Review() {
   const nav = useNav(); const s = useS(); const d = s.draft; const t = thing(s); const code = roomCode(s)
   const off = !s.online
   const [building, setBuilding] = useState(false)
+  const who = whoComes(d, t.trade)
   const submit = () => { if (building) return; fx.tap(); setBuilding(true) } // the beaver builds for a moment, then the report is sent
   const doSubmit = () => {
     const id = String(2400 + Math.floor(Math.random() * 99))
-    const r: Req = { id, item: d.place ? `${d.place}: ${d.issue}` : t.item, issue: d.issue, trade: t.trade, where: d.place ? `${d.place} ${d.floor === 'G' ? 'G' : 'F' + d.floor}` : code, at: Date.now(), stage: 0, tech: t.tech[0], techTrade: t.tech[1], slot: SLOTS[d.slotIx][1], day: DAYS[d.dayIx].long, code: code4(), letIn: d.letIn, tries: 0, missed: 0 }
+    const all = allIssues(d), issueText = all.join(', ') || d.issue
+    const tms = (d.times && d.times.length ? d.times : [{ d: d.dayIx, s: d.slotIx }]), e0 = earliest(tms)
+    const r: Req = { id, item: d.place ? `${d.place}: ${issueText}` : t.item, issue: issueText, issues: all, times: tms.map(timeWords), note: d.note || undefined, trade: who.trade, where: d.place ? `${d.place} ${d.floor === 'G' ? 'G' : 'F' + d.floor}` : code, at: Date.now(), stage: 0, tech: who.tech[0], techTrade: who.tech[1], slot: SLOTS[e0.s][1], day: DAYS[e0.d].long, code: code4(), letIn: false, tries: 0, missed: 0 }
     store.set(x => ({ reqs: [r, ...x.reqs], current: id, draft: emptyDraft() }))
     pushAlert({ title: 'Report submitted', sub: `${r.item} · just now`, reqId: id, kind: 'sent' })
     fx.paper(); nav.go('sent', { tr: 'plane', p: { id } })
@@ -365,12 +423,12 @@ export function Review() {
   return (
     <F id={P} binds={{
       [ids.back]: back(nav), [ids.ticket]: { wrap: el => <Reveal dir="y" dur={0.7}>{el}</Reveal> },
-      [ids.what]: { text: d.place ? d.issue : cap(`${t.item.replace('Ceiling ', '')} ${d.issue.toLowerCase()}`), style: { width: 196 } },
+      [ids.what]: { text: (() => { const all = [...(d.issues || []), ...(d.others || [])]; const first = all[0] || d.issue; const more = all.length > 1 ? ` +${all.length - 1}` : ''; return d.place ? first + more : cap(`${t.item.replace('Ceiling ', '')} ${first.toLowerCase()}`) + more })(), style: { width: 170, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } },
       [ids.photo]: { text: d.photo ? '1 photo' : 'No photo' }, [ids.edit]: { onClick: () => nav.go('doing') },
       [ids.place]: { text: d.place ? `${d.place}, ${d.floor === 'G' ? 'ground floor' : 'floor ' + d.floor}` : `Room ${code}` }, [ids.hostel]: { text: s.hostel },
-      [ids.when]: { text: `${DAYS[d.dayIx].long}, ${SLOTS[d.slotIx][1]}` },
-      [ids.access]: { text: d.letIn ? 'Warden can let them in' : "I'll be in the room" }, [ids.door]: { text: d.letIn ? `If I'm out, the warden opens ${code}` : `Door open for ${firstName(t.tech[0])}` },
-      [ids.note]: { text: `${t.tech[0]}, the ${t.tech[1].toLowerCase()} for your floor, gets this after a supervisor checks it.${d.danger ? ' Marked dangerous: the warden is told now.' : ''}` },
+      [ids.when]: { text: (d.times || []).length > 1 ? `${d.times.length} times to choose from` : `${DAYS[d.dayIx].long}, ${SLOTS[d.slotIx][1]}`, style: { width: 250, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } },
+      [ids.access]: { text: "I'll be in the room" }, [ids.door]: { text: `Door open for ${firstName(who.tech[0])}` },
+      [ids.note]: { text: `${who.tech[0]}, the ${who.tech[1].toLowerCase()} for your floor, gets this after a supervisor checks it.${d.danger ? ' Marked dangerous: the warden is told now.' : ''}` },
       [ids.btn]: { onClick: submit },
     }} extra={<>{d.photo && <div style={{ position: 'absolute', left: 322, top: off ? 198 : 154, zIndex: 2 }}><Shot src={d.photo} w={38} h={38} r={9} rot={4} style={{ boxShadow: '2px 3px 0 #00224E' }} /></div>}{building && <BuildOverlay bg="#FFF1C7" ms={3200} scale={0.88} label="Sending your report" onDone={doSubmit} />}</>} />
   )
@@ -457,7 +515,7 @@ export function Near() {
       '226:875': { text: String(min), style: { textAlign: 'right', width: 178 } }, '226:877': { text: `${tf} is nearby.` }, '226:878': { text: `${r.item.toLowerCase()} · ${roomCode(s)} · ${r.slot}` },
       '226:885': { text: roomCode(s) }, '226:886': { wrap: el => <WalkIn>{el}</WalkIn> }, '226:895': { text: r.tech[0] },
       '226:896': { text: r.tech }, '226:897': { text: `${r.techTrade} · 4.8 average` },
-      '226:899': { text: r.letIn ? 'You chose "Warden can let them in".' : 'You chose "I\'ll be in the room".' },
+      '226:899': { text: 'You said you will be in the room.' },
       '226:907': { onClick: () => { fx.success(); nav.back() } }, '226:904': { onClick: () => { setReq(r.id, { missed: r.missed + 1 }); nav.go('missed', { p: { id: r.id } }) } },
     }} />
   )
@@ -545,9 +603,9 @@ export function Part() {
 
 export function Missed() {
   const nav = useNav(); const r = useReq(); const s = useS(); const tf = firstName(r.tech)
-  const [pick, setPick] = useState(0); const [letIn, setLetIn] = useState(r.letIn); const [busy, setBusy] = useState(false)
+  const [pick, setPick] = useState(0); const [busy, setBusy] = useState(false)
   const slotA = ['226:1124', '226:1130', '226:1136']
-  const book = () => { setReq(r.id, { day: opts[pick][0], slot: slotRange(optSlot[pick]), letIn, stage: 2 }); fx.success(); peek({ mood: 'point', say: 'Booked!', sub: letIn ? 'The warden will open the door.' : `${opts[pick][0]}, ${opts[pick][1]}` }); nav.replace('detail', { p: { id: r.id } }) }
+  const book = () => { setReq(r.id, { day: opts[pick][0], slot: slotRange(optSlot[pick]), letIn: false, stage: 2 }); fx.success(); peek({ mood: 'point', say: 'Booked!', sub: `${opts[pick][0]}, ${opts[pick][1]}` }); nav.replace('detail', { p: { id: r.id } }) }
   const optSlot = [2, 9, 2] // 11:00 AM tomorrow, 2:30 PM tomorrow, 11:00 AM the day after
   const opts: [string, string][] = [[`${DAYS[1].long.split(',')[0]} ${DAYS[1].num}`, `${slotShort(2)} AM`], [`${DAYS[1].long.split(',')[0]} ${DAYS[1].num}`, `${slotShort(9)} PM`], [`${DAYS[2].label} ${DAYS[2].num}`, `${slotShort(2)} AM`]]
   const texts: [string, string][] = [['226:1128', '226:1129'], ['226:1134', '226:1135'], ['226:1140', '226:1141']]
@@ -556,8 +614,7 @@ export function Missed() {
     '226:1115': { text: `${tf} came at 2:40.\nThe door was locked.`, style: { pointerEvents: 'none' } },
     '226:1116': { wrap: el => <PopIn delay={0.9}>{el}</PopIn> }, '226:1119': r.missed >= 2 ? { art: '226:1116', wrap: el => <PopIn delay={1}>{el}</PopIn> } : { wrap: el => <PopIn delay={1}>{el}</PopIn> },
     '226:1122': { text: `${Math.max(1, r.missed)} of 2` },
-    '226:1142': { onClick: () => setLetIn(!letIn), label: 'Let them in if I am out', render: () => <SvgMod id="226:1142" mod={svg => toggleSvg(svg, letIn, 'M276 38')} /> },
-    '226:1149': { text: `The warden opens ${roomCode(s)}` },
+    '226:1142': { hide: true }, '226:1148': { hide: true }, '226:1149': { hide: true },
     '226:1158': { onClick: () => { if (!busy) setBusy(true) } },
   }
   slotA.forEach((id, i) => {

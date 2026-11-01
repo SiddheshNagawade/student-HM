@@ -2,7 +2,7 @@
    Everything here plays once and then rests. No text is ever animated.
    - ScoreDial: a half-circle of dots (like the dot charts) with a needle that swings and settles.
    - InkStamp: a rough brick stamp mark that comes down, presses, and sends out one ring of ink.
-   - StepHop: a small token that hops from one step marker to the next, once.
+   - StepHop: a small token that hops from one step marker to the next, once. */
 import { ReactNode, useEffect, useRef, useState } from 'react'
 import { animate, useReducedMotion } from 'framer-motion'
 import { fx } from '../ds/fx'

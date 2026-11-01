@@ -74,6 +74,8 @@ Shared file (master in `student-hm/tools/shared/src/fig/`), plays once, never an
 - `public/fig/build-1..3.svg` (wind-up, hit, cheer) and `build-log.svg`: `BuilderLoader` / `BuildOverlay` in `src/fig/extras.tsx`. One hammer hit per log, a 3-2-1 pile, then a cheer, played once. Used when the student sends a report and when the technician enters the right closing code.
 - New page transition `board` in `src/ds/nav.tsx`: a board rises with the beaver holding its edge (student sim moves, technician job close).
 - Pipeline: `tools/mascot-refs/make-icons.cjs` (sheets in, SVGs out, 5 app colours: navy, cream, yellow, tan, light blue). The sheets are made in his ChatGPT chat, one item per image: a big picture on top and a row of 3 small ones below.
+- Style rule from him: big illustrations are rough pen sketches (wobbly navy line, loose marker colour, paper showing); small icons may stay clean. The 9 student hero pictures (ix-<item>-hero.svg) are sketches. Icons: supervisor sidebar ico-rail-*.svg, technician bag ico-bag-*.svg and job steps ico-step-*.svg (made by make-icons.cjs ... sets; sketches by ... sketches).
+- Supervisor page: fills any window (rail pinned left, desk centred in the room left over); the logo turns into a sidebar toggle on hover and the rail opens with labels (state kept in localStorage lign.sup.rail, shortcut Shift+Ctrl/Cmd+S).
 
 ## Checking work
 Build: `npx vite build`; preview: `npx vite preview --port 4301`. Use Playwright (390x844 for phone apps, 1440x900 for the desk) to screenshot every screen and catch console errors before pushing. Compare against Figma screenshots when layout changes.

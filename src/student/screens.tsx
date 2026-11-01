@@ -253,9 +253,9 @@ export function Doing() {
       render: () => (
         <div style={{ position: 'relative', width: 390, height: 420 }}>
           <svg width={390} height={420} style={{ position: 'absolute', left: 0, top: 0 }} aria-hidden="true"><circle cx={195} cy={212} r={116} fill="none" stroke="#00224E" strokeWidth={2.6} strokeLinecap="round" strokeDasharray="3 10" /></svg>
-          <div style={{ position: 'absolute', left: 107, top: 138, width: 176, height: 148 }}>
-            {['light', 'switch', 'lamp'].includes(fix.hero) ? <Flicker delay={0.5}><PopIn delay={0.1}><SvgMod id={`fix:${fix.hero}-hero`} mod={fitSvg} style={{ width: 176, height: 148 }} /></PopIn></Flicker>
-              : <Settle delay={0.1}><SvgMod id={`fix:${fix.hero}-hero`} mod={fitSvg} style={{ width: 176, height: 148 }} /></Settle>}
+          <div style={{ position: 'absolute', left: 97, top: 129, width: 196, height: 166 }}>
+            {['light', 'switch', 'lamp'].includes(fix.hero) ? <Flicker delay={0.5}><PopIn delay={0.1}><SvgMod id={`fix:${fix.hero}-hero`} mod={fitSvg} style={{ width: 196, height: 166 }} /></PopIn></Flicker>
+              : <Settle delay={0.1}><SvgMod id={`fix:${fix.hero}-hero`} mod={fitSvg} style={{ width: 196, height: 166 }} /></Settle>}
           </div>
         </div>
       ),

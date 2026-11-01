@@ -16,9 +16,10 @@ const PAL = [NAVY, CREAM, YELLOW, TAN, LBLUE, NAVY];
 const NEAR = [[CREAM, 1], [YELLOW, 2], [TAN, 3], [LBLUE, 4], [WHITE, 5]];
 const hex = (c) => '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
 
+let LUM = 125, SPECKLE = 8 // sketches have thin pen lines: a higher cut keeps them, a lower speckle filter keeps the hatching
 function classify(r, g, b) {
   const lum = 0.3 * r + 0.59 * g + 0.11 * b;
-  if (lum < 125) return 0;
+  if (lum < LUM) return 0;
   let best = 5, bd = 1e9;
   for (const [c, k] of NEAR) { const d = (c[0] - r) ** 2 + (c[1] - g) ** 2 + (c[2] - b) ** 2; if (d < bd) { bd = d; best = k; } }
   return best;
@@ -47,7 +48,7 @@ async function loadCls(file) {
   return { cls, w, h };
 }
 
-const opts = { colorMode: ColorMode.Color, hierarchical: Hierarchical.Stacked, mode: PathSimplifyMode.Spline, filterSpeckle: 8, colorPrecision: 8, layerDifference: 1, cornerThreshold: 60, lengthThreshold: 4, maxIterations: 10, spliceThreshold: 45, pathPrecision: 1 };
+const opts = { colorMode: ColorMode.Color, hierarchical: Hierarchical.Stacked, mode: PathSimplifyMode.Spline, get filterSpeckle() { return SPECKLE }, colorPrecision: 8, layerDifference: 1, cornerThreshold: 60, lengthThreshold: 4, maxIterations: 10, spliceThreshold: 45, pathPrecision: 1 };
 
 /** Cuts the box [x0,y0,x1,y1] out of cls, traces it, writes name.svg, returns {w,h}. */
 async function emit(name, cls, W, box) {
@@ -90,6 +91,52 @@ function bands(has, n, gap) {
 }
 
 const SHEETS = { light: 3, switch: 3, window: 3, door: 3, bed: 3, table: 3, lamp: 3, washroom: 3, stairs: 2 };
+
+// Icon sets (rows of separate icons, one file each): ico-<set>-<name>.svg
+const SETS = [
+  { set: 'rail', file: 'set-rail.png', rows: [4, 3], names: ['desk', 'check', 'forecast', 'blocked', 'disputes', 'fixtures', 'team'] },
+  { set: 'bag', file: 'set-bag.png', rows: [3, 3], names: ['toolkit', 'fuses', 'blades', 'bulbs', 'tape', 'gloves'] },
+  { set: 'step', file: 'set-steps2.png', rows: [3, 2], names: ['bag', 'walk', 'door', 'repair', 'code'] },
+];
+async function runSets() {
+  const report = {};
+  for (const S of SETS) {
+    const { cls, w, h } = await loadCls(path.join(imgDir, S.file));
+    const rowsHas = new Uint8Array(h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (cls[y * w + x] !== 5) { rowsHas[y] = 1; break; }
+    const rb = bands(rowsHas, h, 30);
+    if (rb.length !== S.rows.length) { console.log('!! ' + S.set + ': rows', rb.length, 'expected', S.rows.length); continue; }
+    let n = 0; report[S.set] = {};
+    for (let r = 0; r < rb.length; r++) {
+      const colsHas = new Uint8Array(w);
+      for (let x = 0; x < w; x++) for (let y = rb[r][0]; y <= rb[r][1]; y++) if (cls[y * w + x] !== 5) { colsHas[x] = 1; break; }
+      // icons are evenly spaced and equally big: cut the row at the emptiest column near each ideal cut
+      const xs = []; for (let x = 0; x < w; x++) if (colsHas[x]) xs.push(x);
+      const lo = xs[0], hi = xs[xs.length - 1], cnt = S.rows[r], slot = (hi - lo + 1) / cnt;
+      const ink = (x) => { let c = 0; for (let y = rb[r][0]; y <= rb[r][1]; y++) if (cls[y * w + x] !== 5) c++; return c; };
+      const cuts = [lo];
+      for (let k = 1; k < cnt; k++) { const ideal = Math.round(lo + slot * k); let best = ideal, bv = 1e9; for (let x = ideal - Math.round(slot * 0.22); x <= ideal + Math.round(slot * 0.22); x++) { const v = ink(x) * 1000 + Math.abs(x - ideal); if (v < bv) { bv = v; best = x; } } cuts.push(best); }
+      cuts.push(hi + 1);
+      const cb = []; for (let k = 0; k < cnt; k++) cb.push([cuts[k], cuts[k + 1] - 1]);
+      if (cb.length !== S.rows[r]) console.log('!! ' + S.set + ' row', r, 'columns', cb.length, 'expected', S.rows[r]);
+      for (const c of cb) { const name = S.names[n++]; if (!name) continue; report[S.set][name] = await emit(`ico-${S.set}-${name}`, cls, w, bboxOf(cls, w, c[0], rb[r][0], c[1], rb[r][1])); }
+    }
+  }
+  fs.writeFileSync(path.join(outDir, 'icon-sets.json'), JSON.stringify(report, null, 1));
+}
+if (process.argv[4] === 'sets') { runSets(); return; }
+// Pen-sketch heroes: sk-<item>.png -> fix-<item>-hero.svg (replaces the clean ones)
+async function runSketches() {
+  LUM = 150; SPECKLE = 3
+  const report = {};
+  for (const item of Object.keys(SHEETS)) {
+    const file = path.join(imgDir, `sk-${item}.png`); if (!fs.existsSync(file)) { console.log('no sketch for', item); continue }
+    const { cls, w, h } = await loadCls(file);
+    report[item] = await emit(`fix-${item}-hero`, cls, w, bboxOf(cls, w, 0, 0, w - 1, h - 1));
+  }
+  fs.writeFileSync(path.join(outDir, 'sketch-heroes.json'), JSON.stringify(report, null, 1));
+}
+if (process.argv[4] === 'sketches') { runSketches(); return; }
 
 (async () => {
   const report = {};

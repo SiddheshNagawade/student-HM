@@ -97,6 +97,74 @@ export function InkStamp({ size = 120, delay = 0, rot = -8 }: { size?: number; d
   )
 }
 
+/* ------------------------------------------------------------------ BuilderLoader */
+const BASE = (import.meta as unknown as { env: { BASE_URL: string } }).env.BASE_URL
+const BUILD = [1, 2, 3].map(n => `${BASE}fig/build-${n}.svg`), LOG = `${BASE}fig/build-log.svg`
+// where each of the 6 logs rests (a 3 - 2 - 1 pile), in a 360 x 300 scene
+const SLOTS = [[205, 270], [257, 270], [309, 270], [231, 241], [283, 241], [257, 212]] as const
+/** The beaver builds a log pile, one hammer hit per log, then cheers. Plays once over `ms` and calls `onDone`.
+    Everything is drawn from the traced poses (public/fig/build-*.svg); the timing is driven by hand so it never jumps. */
+export function BuilderLoader({ ms = 3600, scale = 1, onDone, sound = true }: { ms?: number; scale?: number; onDone?: () => void; sound?: boolean }) {
+  const reduce = useReducedMotion()
+  const [t, setT] = useState(reduce ? ms : 0)
+  const done = useRef(false); const hits = useRef(0)
+  const HIT = 6, LEAD = 380, TAIL = 520, step = (ms - LEAD - TAIL) / HIT
+  useEffect(() => {
+    if (reduce) { const k = setTimeout(() => onDone?.(), 500); return () => clearTimeout(k) }
+    const t0 = performance.now(); let raf = 0
+    const tick = (now: number) => {
+      const e = now - t0; setT(e)
+      const k = Math.floor((e - LEAD - step * 0.5) / step) // the hit lands halfway through each step
+      while (hits.current <= k && hits.current < HIT) { if (sound) fx.tick(hits.current % 6); hits.current++ }
+      if (e >= ms && !done.current) { done.current = true; if (sound) fx.success(); onDone?.() }
+      if (e < ms + 50) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [])
+  const k = Math.floor((t - LEAD) / step), within = ((t - LEAD) - k * step) / step // which hit, and how far into it (0 to 1)
+  const building = t >= LEAD && k < HIT
+  const finished = t >= LEAD + HIT * step
+  const frame = finished ? 2 : building ? (within < 0.5 ? 0 : 1) : 0
+  const squash = building && within >= 0.5 && within < 0.75 ? Math.sin(((within - 0.5) / 0.25) * Math.PI) * 0.035 : 0
+  const logs = SLOTS.map((s, i) => {
+    const hitAt = LEAD + i * step + step * 0.5 // when the hammer lands for log i
+    const a = (t - hitAt) / (step * 0.55) // 0 to 1 while it falls and settles
+    if (a < 0) return null
+    const p = Math.min(1, a)
+    const fall = (1 - p) * (1 - p) * -150 // starts above, eases down
+    const bounce = p >= 1 ? 0 : p > 0.7 ? -Math.sin(((p - 0.7) / 0.3) * Math.PI) * 6 : 0
+    return <img key={i} src={LOG} alt="" draggable={false} style={{ position: 'absolute', left: s[0], top: s[1] + fall + bounce - 34, width: 54, opacity: Math.min(1, p * 4), transform: `rotate(${(1 - p) * (i % 2 ? 16 : -16)}deg)` }} />
+  })
+  // a few chips fly off at every hit
+  const chips = building ? Array.from({ length: 4 }, (_, c) => {
+    const q = (t - (LEAD + k * step + step * 0.5)) / 420
+    if (q < 0 || q > 1) return null
+    const vx = [34, 58, 22, 70][c], vy = [-70, -52, -88, -40][c]
+    return <span key={c} style={{ position: 'absolute', left: 168 + vx * q, top: 262 + vy * q + 120 * q * q, width: 7, height: 7, borderRadius: 2, background: c % 2 ? '#E3B987' : '#FFD265', border: '1.5px solid #00224E', opacity: 1 - q, transform: `rotate(${q * 220}deg)` }} />
+  }) : null
+  return (
+    <div role="img" aria-label="Building" style={{ position: 'relative', width: 360 * scale, height: 300 * scale }}>
+      <div style={{ position: 'absolute', left: 0, top: 0, width: 360, height: 300, transform: `scale(${scale})`, transformOrigin: '0 0' }}>
+        <div style={{ position: 'absolute', left: -8, top: 54, width: 230, height: 244, transformOrigin: '50% 100%', transform: `scaleY(${1 - squash}) scaleX(${1 + squash})` }}>
+          {BUILD.map((u, i) => <img key={u} src={u} alt="" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: i === frame ? 1 : 0 }} />)}
+        </div>
+        {logs}{chips}
+      </div>
+    </div>
+  )
+}
+
+/** A full-screen cover with the builder scene in the middle (for "sending" and "closing" moments). */
+export function BuildOverlay({ bg = '#FFF1C7', ms = 3600, scale = 1, onDone, label }: { bg?: string; ms?: number; scale?: number; onDone?: () => void; label?: string }) {
+  return (
+    <div style={{ position: 'absolute', inset: 0, zIndex: 60, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="status" aria-live="polite">
+      {label && <span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>{label}</span>}
+      <BuilderLoader ms={ms} scale={scale} onDone={onDone} />
+    </div>
+  )
+}
+
 /* ------------------------------------------------------------------ StepHop */
 /** A token that hops along an arc from one point to another once, then is gone (the real marker pops in where it lands).
     `from` and `to` are the centres of the two markers, in screen coordinates. */

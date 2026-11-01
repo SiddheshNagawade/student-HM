@@ -7,7 +7,7 @@ import { NavApi } from '../ds/nav'
 import { fx } from '../ds/fx'
 import DATA from './fig.json'
 import { Hanging, peek } from '../fig/mascot'
-import { ScoreDial, StepHop } from '../fig/extras'
+import { ScoreDial, StepHop, BuildOverlay } from '../fig/extras'
 import { TimeWheel, Sun, SLOT_START, slotShort, slotRange, goneToday } from './wheel'
 import { store, State, roomCode, nameFrom, IITR, initial, firstName, emptyDraft, code4, active, pushAlert, setReq, ago, stamp, Req } from './store'
 
@@ -224,27 +224,53 @@ function remapHome(b: Binds) {
 }
 
 /* ================= Report a problem ================= */
+/* Hand-drawn pictures for every thing that can break (public/fig/fix-*.svg): a big one on top, a small one per problem.
+   'fan' means the Figma fan drawing that was already there. */
+const FIX: Record<string, { hero: string; tiles: string[] }> = {
+  light: { hero: 'light', tiles: ['light-1', 'light-2', 'light-3'] }, switch: { hero: 'switch', tiles: ['switch-1', 'switch-2', 'switch-3'] },
+  window: { hero: 'window', tiles: ['window-1', 'window-2', 'window-3'] }, door: { hero: 'door', tiles: ['door-1', 'door-2', 'door-3'] },
+  bed: { hero: 'bed', tiles: ['bed-1', 'bed-2', 'bed-3'] }, table: { hero: 'table', tiles: ['table-1', 'table-2', 'table-3'] },
+  lamp: { hero: 'lamp', tiles: ['lamp-1', 'lamp-2', 'lamp-3'] }, Washroom: { hero: 'washroom', tiles: ['washroom-1', 'washroom-2', 'washroom-3'] },
+  Corridor: { hero: 'light', tiles: ['light-1', 'fan', 'switch-1'] }, Stairs: { hero: 'stairs', tiles: ['stairs-1', 'light-1', 'stairs-2'] },
+  'Common room': { hero: 'lamp', tiles: ['fan', 'light-1', 'switch-1'] },
+}
+const fitSvg = (svg: string) => svg.replace(/^(<svg [^>]*?) width="\d+" height="\d+"/, '$1 width="100%" height="100%"')
 export function Doing() {
   const nav = useNav(); const s = useS(); const t = thing(s); const d = s.draft; const code = roomCode(s)
   const where = d.place ? `${d.place} · ${d.floor === 'G' ? 'Ground' : 'Floor ' + d.floor}` : code
   const tiles: [string, string, string, number][] = [['226:238', '226:253', '226:239', 0], ['226:254', '226:270', '226:255', 1], ['226:271', '226:287', '226:272', 2]]
   const isFan = d.item === 'fan'
+  const fix = isFan ? undefined : FIX[d.item]
   const binds: Binds = {
-    '226:299': back(nav), '226:222': { text: `${t.item} · ${where}` },
+    '226:299': back(nav), '226:222': { text: d.place ? where : `${t.item} · ${where}` },
     '226:236': { text: d.place ? `${d.place}. Now, what is wrong?` : `Yes, the ${t.item.toLowerCase()}. Now, what is it doing?` },
     '226:237': { text: d.place ? 'What is wrong?' : 'What is it doing?' },
     '226:288': { onClick: () => { fx.shutter(); store.set(x => ({ draft: { ...x.draft, photo: !x.draft.photo } })) }, label: 'Add a photo' },
     '226:289': d.photo ? { render: () => <img src={figArt('226:1219')} width={40} height={40} style={{ marginLeft: -7, marginTop: -7 }} alt="" />, onClick: () => store.set(x => ({ draft: { ...x.draft, photo: false } })) } : { onClick: () => { fx.shutter(); store.set(x => ({ draft: { ...x.draft, photo: true } })) } },
     '226:293': { text: d.photo ? 'Photo added' : 'Add a photo, if you like' }, '226:294': d.photo ? { text: 'Tap the photo to remove it' } : { hide: true },
     '226:296': { text: `You are usually free ${usualFree(s)}` },
-    '226:223': isFan ? { wrap: el => <SpinDown cx={195} cy={214}>{el}</SpinDown> } : { hide: true },
+    '226:223': isFan ? { wrap: el => <SpinDown cx={195} cy={214}>{el}</SpinDown> } : fix ? {
+      render: () => (
+        <div style={{ position: 'relative', width: 390, height: 420 }}>
+          <svg width={390} height={420} style={{ position: 'absolute', left: 0, top: 0 }} aria-hidden="true"><circle cx={195} cy={212} r={116} fill="none" stroke="#00224E" strokeWidth={2.6} strokeLinecap="round" strokeDasharray="3 10" /></svg>
+          <div style={{ position: 'absolute', left: 107, top: 138, width: 176, height: 148 }}>
+            {['light', 'switch', 'lamp'].includes(fix.hero) ? <Flicker delay={0.5}><PopIn delay={0.1}><SvgMod id={`fix:${fix.hero}-hero`} mod={fitSvg} style={{ width: 176, height: 148 }} /></PopIn></Flicker>
+              : <Settle delay={0.1}><SvgMod id={`fix:${fix.hero}-hero`} mod={fitSvg} style={{ width: 176, height: 148 }} /></Settle>}
+          </div>
+        </div>
+      ),
+    } : { hide: true },
     '226:297': { onClick: () => { if (!d.issue) { fx.error(); return } t.trade === 'Electrical' ? nav.go('safety') : nav.go('slot') }, style: { opacity: d.issue ? 1 : 0.55 } },
   }
   for (const [frame, label, art, i] of tiles) {
     const on = d.issue === t.issues[i]
     binds[frame] = { onClick: () => { fx.select(); store.set(x => ({ draft: { ...x.draft, issue: t.issues[i] } })) }, style: { background: on ? '#FFD265' : '#FFFBF3', boxShadow: on ? '3px 4px 0 #00224E' : 'none' }, label: t.issues[i] }
-    binds[label] = { text: t.issues[i], style: { left: 0, width: 106, textAlign: 'center', whiteSpace: 'normal' } }
-    binds[art] = isFan ? { render: () => <SvgMod id={art} mod={svg => on ? svg.replace(/#FFD265/g, '#FFFBF3') : svg.replace(/fill="#FFFBF3"/g, 'fill="#FFD265"')} />, style: { pointerEvents: 'none' } } : { hide: true }
+    // two-line labels sit centred inside the tile, never over its edge
+    binds[label] = { text: t.issues[i], style: { left: 0, top: 92, width: 106, height: 36, padding: '0 7px', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', whiteSpace: 'normal', fontSize: 13, lineHeight: '15px', overflow: 'hidden' } }
+    const pic = fix?.tiles[i]
+    binds[art] = isFan ? { render: () => <SvgMod id={art} mod={svg => on ? svg.replace(/#FFD265/g, '#FFFBF3') : svg.replace(/fill="#FFFBF3"/g, 'fill="#FFD265"')} />, style: { pointerEvents: 'none' } }
+      : pic ? { render: () => <SvgMod id={pic === 'fan' ? '226:239' : `fix:${pic}`} mod={svg => fitSvg(on ? svg.replace(/#FFD265/g, '#FFFBF3') : svg)} style={{ width: 106, height: 84, padding: '8px 12px 2px', boxSizing: 'border-box' }} />, wrap: (el: ReactNode) => <PopIn delay={0.25 + i * 0.1}>{el}</PopIn>, style: { pointerEvents: 'none' } }
+      : { hide: true }
   }
   return <F id="226:215" binds={binds} />
 }
@@ -315,7 +341,9 @@ const swapTo = (svg: string, from: string, to: string) => { let done = false; re
 export function Review() {
   const nav = useNav(); const s = useS(); const d = s.draft; const t = thing(s); const code = roomCode(s)
   const off = !s.online
-  const submit = () => {
+  const [building, setBuilding] = useState(false)
+  const submit = () => { if (building) return; fx.tap(); setBuilding(true) } // the beaver builds for a moment, then the report is sent
+  const doSubmit = () => {
     const id = String(2400 + Math.floor(Math.random() * 99))
     const r: Req = { id, item: d.place ? `${d.place}: ${d.issue}` : t.item, issue: d.issue, trade: t.trade, where: d.place ? `${d.place} ${d.floor === 'G' ? 'G' : 'F' + d.floor}` : code, at: Date.now(), stage: 0, tech: t.tech[0], techTrade: t.tech[1], slot: SLOTS[d.slotIx][1], day: DAYS[d.dayIx].long, code: code4(), letIn: d.letIn, tries: 0, missed: 0 }
     store.set(x => ({ reqs: [r, ...x.reqs], current: id, draft: emptyDraft() }))
@@ -335,7 +363,7 @@ export function Review() {
       [ids.access]: { text: d.letIn ? 'Warden can let them in' : "I'll be in the room" }, [ids.door]: { text: d.letIn ? `If I'm out, the warden opens ${code}` : `Door open for ${firstName(t.tech[0])}` },
       [ids.note]: { text: `${t.tech[0]}, the ${t.tech[1].toLowerCase()} for your floor, gets this after a supervisor checks it.${d.danger ? ' Marked dangerous: the warden is told now.' : ''}` },
       [ids.btn]: { onClick: submit },
-    }} />
+    }} extra={building ? <BuildOverlay bg="#FFF1C7" ms={3200} scale={0.88} label="Sending your report" onDone={doSubmit} /> : undefined} />
   )
 }
 

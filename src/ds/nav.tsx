@@ -3,13 +3,14 @@
    up    = sheet rises from the bottom (modal-ish steps)
    plane = paper plane flies across and the new screen is revealed in its wake (student)
    wave  = the blue field washes up over the screen and pulls back on the next one (technician)
+   board = a board rises with the beaver holding on to its top edge, passes over, and the next screen is under it
    swap  = quick crossfade, nothing moves, for tabs and desktop sections */
 import { ReactNode, createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion, Variants } from 'framer-motion'
 import { fx } from './fx'
 import { spring } from './motion'
 
-export type Tr = 'push' | 'up' | 'plane' | 'wave' | 'swap' | 'none'
+export type Tr = 'push' | 'up' | 'plane' | 'wave' | 'board' | 'swap' | 'none'
 type Entry<S> = { s: S; p?: Record<string, unknown>; k: number }
 export type NavApi<S extends string> = {
   screen: S; params: Record<string, unknown>; depth: number; dir: 1 | -1; tr: Tr; key: number
@@ -35,7 +36,7 @@ export function useNav<S extends string>(initial: S, defaultTr: Tr = 'push'): Na
   }, [defaultTr])
   const back = useCallback((o?: { tr?: Tr }) => {
     const tr = o?.tr ?? lastTr.current.pop() ?? defaultTr
-    setMeta({ dir: -1, tr: tr === 'plane' || tr === 'wave' ? 'push' : tr })
+    setMeta({ dir: -1, tr: tr === 'plane' || tr === 'wave' || tr === 'board' ? 'push' : tr })
     setStack(st => (st.length > 1 ? st.slice(0, -1) : st))
   }, [defaultTr])
   const reset = useCallback((s: S, o?: { tr?: Tr; p?: Record<string, unknown> }) => {
@@ -56,13 +57,14 @@ const variants = {
     if (tr === 'push') return dir > 0 ? { x: '100%', y: 0, zIndex: 2, filter: 'brightness(1)' } : { x: '-26%', y: 0, zIndex: 1, filter: 'brightness(0.86)' }
     if (tr === 'up') return dir > 0 ? { y: '100%', x: 0, zIndex: 2 } : { y: 0, x: 0, scale: 0.96, zIndex: 1, filter: 'brightness(0.86)' }
     if (tr === 'plane') return { clipPath: 'inset(0% 100% 0% 0%)', zIndex: 2 }
-    if (tr === 'wave') return { opacity: 0, zIndex: 2 }
+    if (tr === 'wave' || tr === 'board') return { opacity: 0, zIndex: 2 }
     return { opacity: 0, zIndex: 2 }
   },
   center: ({ tr }: C) => {
     const base = { x: 0, y: 0, scale: 1, opacity: 1, filter: 'brightness(1)', zIndex: 2 }
     if (tr === 'plane') return { ...base, clipPath: 'inset(0% 0% 0% 0%)', transition: { duration: 0.62, ease: [0.65, 0, 0.35, 1] } }
     if (tr === 'wave') return { ...base, transition: { opacity: { duration: 0, delay: 0.26 } } }
+    if (tr === 'board') return { ...base, transition: { opacity: { duration: 0, delay: 0.36 } } }
     if (tr === 'swap') return { ...base, transition: { duration: 0.14, ease: 'easeOut' } }
     return { ...base, transition: spring }
   },
@@ -72,6 +74,7 @@ const variants = {
     if (tr === 'up') return dir > 0 ? { scale: 0.96, zIndex: 1, filter: 'brightness(0.86)', transition: spring } : { y: '100%', zIndex: 3, transition: spring }
     if (tr === 'plane') return { zIndex: 1, x: '-12%', filter: 'brightness(0.9)', transition: { duration: 0.62, ease: [0.65, 0, 0.35, 1] } }
     if (tr === 'wave') return { opacity: 0, zIndex: 1, transition: { opacity: { duration: 0, delay: 0.26 } } }
+    if (tr === 'board') return { opacity: 0, zIndex: 1, transition: { opacity: { duration: 0, delay: 0.36 } } }
     return { opacity: 0, zIndex: 1, transition: { duration: 0.08 } }
   },
 } as unknown as Variants
@@ -92,6 +95,7 @@ export function Stage({ nav, children, waveColor = '#0794FF' }: { nav: NavApi<st
         </AnimatePresence>
         {!reduce && nav.tr === 'plane' && nav.dir > 0 && <PlaneFly key={'p' + nav.key} />}
         {!reduce && nav.tr === 'wave' && nav.dir > 0 && <WaveWash key={'w' + nav.key} color={waveColor} />}
+        {!reduce && nav.tr === 'board' && nav.dir > 0 && <BoardWipe key={'b' + nav.key} color={waveColor} />}
       </div>
     </NavCtx.Provider>
   )
@@ -137,6 +141,24 @@ function WaveWash({ color }: { color: string }) {
       <svg className="absolute -bottom-[38px] left-0 w-full rotate-180" height="40" viewBox="0 0 400 40" preserveAspectRatio="none">
         <path fill={color} d="M0 20 Q50 0 100 20 T200 20 T300 20 T400 20 V40 H0Z" />
       </svg>
+    </motion.div>
+  )
+}
+
+/** A board rises from the bottom with the beaver holding its top edge, covers the screen, and keeps going up. */
+function BoardWipe({ color }: { color: string }) {
+  useMemo(() => fx.wave(), [])
+  const base = (import.meta as unknown as { env: { BASE_URL: string } }).env.BASE_URL
+  const fill = color.toLowerCase() === '#ffd265' ? '#FFFBF3' : '#FFD265' // always a board that stands out from the screen behind it
+  return (
+    <motion.div className="pointer-events-none absolute inset-x-0 z-10" style={{ height: '125%', top: 0 }}
+      initial={{ y: '100%' }} animate={{ y: ['100%', '-4%', '-4%', '-135%'] }} transition={{ duration: 0.72, times: [0, 0.42, 0.52, 1], ease: [0.65, 0, 0.35, 1] }}>
+      <div className="absolute inset-0" style={{ background: fill, borderTop: '5px solid #00224E' }}>
+        <div className="absolute left-0 right-0" style={{ top: 12, height: 3, background: '#00224E', opacity: 0.18 }} />
+        {[12, 88].map(p => <span key={p} className="absolute rounded-full" style={{ left: p + '%', top: 22, width: 9, height: 9, background: '#FFFBF3', border: '2.4px solid #00224E' }} />)}
+      </div>
+      <motion.img src={`${base}fig/mascot-peek-1.svg`} alt="" draggable={false} className="absolute" style={{ left: '50%', width: 168, marginLeft: -84, bottom: '100%', marginBottom: -6 }}
+        animate={{ rotate: [0, -3, 2, 0] }} transition={{ duration: 0.5, delay: 0.2 }} />
     </motion.div>
   )
 }

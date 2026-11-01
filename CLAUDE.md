@@ -69,5 +69,11 @@ Shared file (master in `student-hm/tools/shared/src/fig/`), plays once, never an
 - The forecast's two over-the-line dots now hop over to Monday. Do not use framer-motion keyframe arrays together with `initial` or `delay` for new motion: they jumped straight to the end here; drive such motion by hand (see `StepHop`, `InkStamp`).
 - Removed on purpose (they only repeated the screen): desk subtitle sentence, "closure 1 of 6", dispute sub-line, supervisor tech "their phone shows Hindi...", student slot range text, "Optional", what's-wrong helper line, tech job counters (jobs list and done screen).
 
+## Hand-drawn repair icons and the builder (done)
+- `public/fig/fix-<item>-hero.svg` and `fix-<item>-1..3.svg`: big picture plus one small picture per problem for light, switch, window, door, bed, table, lamp, washroom, stairs. They are used on the student "What is it doing / What is wrong?" screen (`FIX` map in `src/student/screens.tsx`); Corridor and Common room reuse them and the Figma fan drawing.
+- `public/fig/build-1..3.svg` (wind-up, hit, cheer) and `build-log.svg`: `BuilderLoader` / `BuildOverlay` in `src/fig/extras.tsx`. One hammer hit per log, a 3-2-1 pile, then a cheer, played once. Used when the student sends a report and when the technician enters the right closing code.
+- New page transition `board` in `src/ds/nav.tsx`: a board rises with the beaver holding its edge (student sim moves, technician job close).
+- Pipeline: `tools/mascot-refs/make-icons.cjs` (sheets in, SVGs out, 5 app colours: navy, cream, yellow, tan, light blue). The sheets are made in his ChatGPT chat, one item per image: a big picture on top and a row of 3 small ones below.
+
 ## Checking work
 Build: `npx vite build`; preview: `npx vite preview --port 4301`. Use Playwright (390x844 for phone apps, 1440x900 for the desk) to screenshot every screen and catch console errors before pushing. Compare against Figma screenshots when layout changes.

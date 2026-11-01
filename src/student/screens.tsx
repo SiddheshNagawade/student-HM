@@ -21,9 +21,7 @@ const useS = () => store.use(s => s)
 const back = (nav: NavApi<Screen>) => ({ onClick: () => nav.back(), label: 'Back' })
 /** Swing a group of loose layers as one notice board hung on a pin at (px, py). */
 const swingAll = (ids: string[], scr: FNode, px: number, py: number): Binds => Object.fromEntries(ids.map(i => { const n = scr.k!.find(k => k.i === i)!; return [i, { style: { animation: 'figswing 1.9s cubic-bezier(.3,.6,.4,1) .15s both', transformOrigin: `${px - n.x}px ${py - n.y}px` } }] }))
-/* The beaver drawings from the Figma, by mood. */
-export const BEAVER = { wave: '227:313', cheer: '226:570', thumbs: '229:79', think: '226:910', point: '227:368' } as const
-const HANG = { art: '226:570', sign: 'sign-board', cx: 195, top: 30, scale: 1.2 }
+const HANG = { cx: 195, top: 30, scale: 1.06 }
 const hide2 = (...ids: string[]): Binds => Object.fromEntries(ids.map(i => [i, { hide: true }]))
 const abs = (x: number, y: number, w: number, h: number): React.CSSProperties => ({ position: 'absolute', left: x, top: y, width: w, height: h })
 

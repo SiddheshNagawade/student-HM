@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNav, Stage } from '../ds/nav'
 import { PhoneStage, ScreenGroup, SimAction } from '../ds/stage'
-import { AppCtx, ALL, Screen, BEAVER } from './screens'
+import { AppCtx, ALL, Screen } from './screens'
 import { PeekHost, OfflineBuddy, peek } from '../fig/mascot'
 import { store, active, setReq, pushAlert, code4, workTime } from './store'
 
@@ -73,8 +73,8 @@ function Inner() {
         tagline="For students in IIT Roorkee Bhawans: report what broke, see when the technician is close, and close the job with your own code."
         onRestart={() => { store.reset(); nav.reset('welcome', { tr: 'swap' }) }}>
         <Stage nav={nav as never} waveColor="#FFD265"><El /></Stage>
-        <OfflineBuddy offline={!s.online} art={BEAVER.cheer} sign="sign-board" cx={195} scale={1.05} title="No internet" sub="Reconnect to get the latest updates. Your reports wait on this phone." back={{ mood: 'wave', say: 'Back online!', sub: 'Everything is sent.' }} />
-        <PeekHost arts={BEAVER} w={390} h={844} size={230} />
+        <OfflineBuddy offline={!s.online} cx={195} scale={1.05} title="No internet" sub="Reconnect to get the latest updates. Your reports wait on this phone." back={{ mood: 'wave', say: 'Back online!', sub: 'Everything is sent.' }} />
+        <PeekHost w={390} h={844} size={300} />
       </PhoneStage>
     </AppCtx.Provider>
   )

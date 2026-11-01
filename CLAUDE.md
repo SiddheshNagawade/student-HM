@@ -52,14 +52,13 @@ The master copy is in `student-hm/tools/shared/` with `tools/sync-shared.sh`. Ch
 - Tappable parts of drawings show a soft yellow glow (hint once on first view); no "+" icons on top of drawings.
 - Responsive: phone apps scale to fit without stretching; the supervisor desk keeps a readable minimum size and scrolls sideways on small screens.
 
-## What was being worked on last
-New mascot poses. Plan: he generates poses in his ChatGPT "Image Generator Pro" chat one at a time, using `tools/mascot-refs/PROMPTS.md` and `beaver-reference.png`. Then:
-1. Check each image: two eyes with shine dots, hat, teeth, flat colours only, thick navy outline, correct finger count, nothing cut off, same size across a series.
-2. Vectorize (for example `pip install vtracer`), snap colours to #00224E, #FFFBF3, #FFD265, #E3B987.
-3. Put the frames into `mascot.tsx` as one-time animations (peek wave 1a–1c, hanging 2a–2b, big-head cheer 3a–3b).
-With browser access (Claude in Chrome), you can type the prompts into his ChatGPT tab yourself, one pose per message, and check each image before saving.
+## Mascot (done)
+The beaver now uses seven hand-drawn poses made in his ChatGPT chat, traced to flat SVG with exactly four colours (`public/fig/mascot-*.svg`):
+- `mascot-peek-1..3`: neutral, wave, wink (head and paws over the bottom edge). `mascot-cheer-1..2`: big-head shout, big-head thumbs up. `mascot-hang-1..2`: hanging with a blank sign, still and leaning.
+- `src/fig/mascot.tsx` plays them as one-time frame sequences: `peek()` (wave = neutral/wave/neutral/wave, point = neutral then wink, cheer, thumbs, think = tilt), `<Hanging>` (drops in, leans left, right, settles; the sign text leans with the sign) and `<OfflineBuddy>` (then only his head stays at the top).
+- Sources and the pipeline: `tools/mascot-refs/poses/*.png` (raw images, kept locally and not committed), `tools/mascot-refs/make-vectors.cjs` (needs `npm i sharp @neplex/vectorizer`; the result is in `tools/mascot-refs/vectors/`). In dev, `window.__peek({ mood, say })` shows him for testing.
+- `PeekHost` no longer takes `arts`; `Hanging` and `OfflineBuddy` no longer take `art` or `sign`.
 
 Ideas from his reference images still to explore: half-circle score dial (supervisor load / student request status), blob characters peeking from screen edges, clock-dial scheduler.
-
 ## Checking work
 Build: `npx vite build`; preview: `npx vite preview --port 4301`. Use Playwright (390x844 for phone apps, 1440x900 for the desk) to screenshot every screen and catch console errors before pushing. Compare against Figma screenshots when layout changes.

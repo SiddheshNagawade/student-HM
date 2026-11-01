@@ -86,7 +86,7 @@ export function Stage({ nav, children, waveColor = '#0794FF' }: { nav: NavApi<st
   const ctx = useMemo(() => ({ tr: nav.tr, dir: nav.dir }), [nav.tr, nav.dir])
   return (
     <NavCtx.Provider value={ctx}>
-      <div className="absolute inset-0 overflow-hidden bg-navy">
+      <div className="absolute inset-0 overflow-hidden">
         <AnimatePresence initial={false} custom={custom}>
           <motion.div key={nav.key} custom={custom} variants={variants} initial="enter" animate="center" exit="exit"
             className="absolute inset-0 will-change-transform" style={{ boxShadow: nav.tr === 'push' ? '-12px 0 30px -12px rgba(0,34,78,.35)' : undefined }}>

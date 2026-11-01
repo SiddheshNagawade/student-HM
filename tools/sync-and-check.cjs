@@ -5,7 +5,7 @@ const root = 'D:/Hostel maintainance';
 const nodeDir = process.env.LOCALAPPDATA + '/Programs/nodejs';
 const env = { ...process.env, PATH: process.env.PATH + ';' + nodeDir.replace(/\//g, '\\') };
 const shared = root + '/student-hm/tools/shared/src';
-const files = ['fig/Fig.tsx', 'fig/preload.ts', 'fig/extras.tsx', 'fig/mascot.tsx', 'fig/anim.tsx', 'ds/stage.tsx', 'ds/viewport.ts', 'ds/nav.tsx'];
+const files = ['fig/Fig.tsx', 'fig/backdrop.tsx', 'fig/preload.ts', 'fig/extras.tsx', 'fig/mascot.tsx', 'fig/anim.tsx', 'ds/stage.tsx', 'ds/viewport.ts', 'ds/nav.tsx'];
 const log = []; const say = (s) => { log.push(s); console.log(s) };
 for (const r of ['student-hm', 'technician-hm', 'supervisor-hm']) {
   for (const f of files) if (fs.existsSync(`${shared}/${f}`)) fs.copyFileSync(`${shared}/${f}`, `${root}/${r}/src/${f}`);

@@ -1,7 +1,7 @@
 // Commits and pushes all three apps to main.  Usage: node tools/ship.cjs "commit message"
 const { execFileSync } = require('child_process');
 const git = process.env.LOCALAPPDATA + '\\Programs\\Git\\cmd\\git.exe';
-const msg = (process.argv[2] || 'Update') + '\n\nCo-Authored-By: Claude <noreply@anthropic.com>';
+const msg = (process.argv[2] || 'Update') + '\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>';
 for (const r of ['student-hm', 'technician-hm', 'supervisor-hm']) {
   const cwd = 'D:/Hostel maintainance/' + r; console.log('== ' + r);
   const g = (...a) => { try { return execFileSync(git, a, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }) } catch (e) { return (e.stdout || '') + (e.stderr || '') } };

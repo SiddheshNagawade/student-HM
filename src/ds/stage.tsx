@@ -1,111 +1,139 @@
-/* Where a phone app lives. On a real phone: full screen. On a laptop: a phone-sized device in the
-   middle with a side panel (what this app is, sound on/off, restart, and a map of every screen so a
-   reviewer can jump anywhere without clicking through the whole flow). */
-import { ReactNode, createContext, useContext, useEffect, useState } from 'react'
+/* Where a phone app lives. Always full screen, on every device: the 390 x 844 Figma frame is scaled to fit and the screen's
+   own background is carried out to the window edges, so there are no bars and no device bezel. The "review" panel (what this
+   app is, sound on/off, restart, the other side's actions, a map of every screen) sits behind a small "Try it" button. */
+import { ReactNode, createContext, useContext, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Volume2, VolumeX, RotateCcw, MapPin, FlaskConical } from './icons'
 import { setMuted, useMuted, fx } from './fx'
 import { cx, Tooltip } from './ui'
 import { useViewport, useKeepFocusVisible, VP } from './viewport'
+import { Backdrop, useBackdrop, colorOf } from '../fig/backdrop'
 
 const Framed = createContext(false)
 export const useFramed = () => useContext(Framed)
 export type ScreenGroup = { title: string; items: { id: string; label: string }[] }
 
-function useWide() {
-  const q = '(min-width: 900px) and (min-height: 640px)'
-  const [w, setW] = useState(() => matchMedia(q).matches)
-  useEffect(() => { const m = matchMedia(q); const f = () => setW(m.matches); m.addEventListener('change', f); return () => m.removeEventListener('change', f) }, [])
-  return w
-}
-/** On a laptop the device is as big as the window allows (room is left for the side panel), from a little smaller up to 1.5 times. */
-function useScale(vh: number, vw: number) {
-  return Math.max(0.5, Math.min(1.5, (vh - 48) / 844, (vw - 96 - 348) / 390))
-}
-
 /** The 390 x 844 Figma frame, always kept whole and never stretched, in every window:
-    - laptop: a rounded device in the middle (the side panel sits next to it)
-    - phone, upright: scaled to fit the screen exactly
+    - upright phone, tablet or laptop: scaled to fit (up to 2.4 times), centred; the screen's background carries on to the window edges
     - phone turned sideways or a very short window: not shrunk to a stamp; it keeps a readable size and you scroll up and down
     - keyboard open: the visible area is exactly what the keyboard leaves, the frame keeps its width, and the field you are typing in scrolls into view
     One tree for all of these, so the screen (and what you typed) survives a rotate or a resize. */
-function PhoneBox({ wide, bg, scale, vp, children }: { wide: boolean; bg: string; scale: number; vp: VP; children: ReactNode }) {
-  useKeepFocusVisible()
+/** How big the frame is drawn in this window, and whether the window is too short to show it whole (then it scrolls). */
+export function frameScale(vp: VP) {
   const fit = Math.min(vp.w / 390, vp.h / 844)
   const roomy = !vp.kb && fit >= 0.78
-  const k = wide ? scale : vp.kb ? Math.min(vp.w / 390, 1.3) : roomy ? fit : Math.min(vp.w / 390, 1)
-  const scrolls = !wide && !roomy
+  const raw = vp.kb ? Math.min(vp.w / 390, 1.3) : roomy ? Math.min(fit, 2.4) : Math.min(vp.w / 390, 1)
+  // a whole number of pixels wide, so the frame's side edges never fall between two screen pixels (that showed as a faint vertical line)
+  return { k: Math.floor(390 * raw) / 390, scrolls: !roomy }
+}
+function PhoneBox({ bg, vp, children }: { bg: string; vp: VP; children: ReactNode }) {
+  useKeepFocusVisible()
+  const { k, scrolls } = frameScale(vp)
+  const screen = useBackdrop()
+  const left = Math.round((vp.w - 390 * k) / 2), top = scrolls ? 0 : Math.max(0, Math.round((vp.h - 844 * k) / 2))
+  const areaH = scrolls ? Math.max(vp.h, 844 * k) : vp.h
   return (
-    <div style={wide ? { display: 'contents' } : { position: 'fixed', left: 0, right: 0, top: vp.top, height: vp.h, background: bg, overflowX: 'hidden', overflowY: scrolls ? 'auto' : 'hidden', display: 'flex', justifyContent: 'center', alignItems: scrolls ? 'flex-start' : 'center', overscrollBehavior: 'contain' }}>
-      <div className="shrink-0" style={{ width: 390 * k, height: 844 * k }}>
-        <div className={cx('relative origin-top-left overflow-hidden', wide && 'rounded-[48px] shadow-phone')} style={{ width: 390, height: 844, transform: `scale(${k})`, background: bg }}>{children}</div>
+    <div style={{ position: 'fixed', left: 0, right: 0, top: vp.top, height: vp.h, background: (screen && colorOf(screen.f)) || bg, overflowX: 'hidden', overflowY: scrolls ? 'auto' : 'hidden', overscrollBehavior: 'contain' }}>
+      <div style={{ position: 'relative', width: vp.w, height: areaH }}>
+        {/* the screen's own background, carried out to the window edges (no bars, no bezel) */}
+        {screen && <div style={{ position: 'absolute', left: 0, top: 0, width: vp.w, height: areaH, pointerEvents: 'none' }}><Backdrop s={screen} k={k} left={left} top={top} vw={vp.w} vh={areaH} solid={scrolls} /></div>}
+        {/* placed on whole pixels, so its edges are crisp */}
+        <div style={{ position: 'absolute', left, top, width: 390 * k, height: 844 * k }}>
+          <div className="relative origin-top-left overflow-hidden" style={{ width: 390, height: 844, transform: `scale(${k})` }}>{children}</div>
+        </div>
       </div>
     </div>
   )
 }
 
 export type SimAction = { label: string; sub?: string; run: () => void }
-export function PhoneStage({ app, tagline, accent = '#FFD265', groups, current, onJump, onRestart, children, bg = '#FFFBF3', sim = [] }: {
-  app: string; tagline: string; accent?: string; groups: ScreenGroup[]; current: string; onJump: (id: string) => void; onRestart: () => void; children: ReactNode; bg?: string; sim?: SimAction[]
-}) {
-  const wide = useWide(); const vp = useViewport(); const scale = useScale(vp.h, vp.w); const muted = useMuted()
+type PanelProps = { app: string; tagline: string; accent: string; groups: ScreenGroup[]; current: string; onJump: (id: string) => void; onRestart: () => void; sim: SimAction[] }
+
+function ReviewPanel({ app, tagline, accent, groups, current, onJump, onRestart, sim }: PanelProps) {
+  const muted = useMuted()
   return (
-    <div className={wide ? 'fixed inset-0 flex items-center justify-center gap-12 bg-[#EDE4CF] p-6' : 'contents'}>
-      {wide && <aside className="flex h-full max-h-[844px] w-[300px] shrink-0 flex-col">
-        <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-[12px] border-2 border-navy font-head text-[24px] font-extrabold" style={{ background: accent }}><span className="pt-1">A</span></span>
-          <div><div className="font-head text-[22px] font-extrabold leading-none">ALIGN</div><div className="mt-1 text-[14px] font-semibold text-mid">{app}</div></div>
-        </div>
-        <p className="mt-4 text-[14px] leading-relaxed text-mid">{tagline}</p>
-        <div className="mt-4 flex gap-2">
-          <Tooltip label={muted ? 'Turn sound and vibration on' : 'Mute sound and vibration'}>
-            <button onClick={() => setMuted(!muted)} className="flex h-10 items-center gap-2 rounded-[12px] border-2 border-navy bg-paper px-3 text-[14px] font-bold shadow-btn active:translate-y-[3px] active:shadow-none">
-              {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}{muted ? 'Sound off' : 'Sound on'}
-            </button>
-          </Tooltip>
-          <Tooltip label="Clear demo data and start again">
-            <button onClick={() => { fx.tap(); onRestart() }} className="flex h-10 items-center gap-2 rounded-[12px] border-2 border-navy bg-paper px-3 text-[14px] font-bold shadow-btn active:translate-y-[3px] active:shadow-none"><RotateCcw size={17} />Restart</button>
-          </Tooltip>
-        </div>
-        <AnimatePresence>
-          {sim.length > 0 && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-              <div className="mt-6 flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.08em] text-navy"><FlaskConical size={15} />Simulate the other side</div>
-              <p className="mt-1 text-[13px] text-mid">What the {app.startsWith('Tech') ? 'student and supervisor' : app.startsWith('Student') ? 'supervisor and technician' : 'students and technicians'} would do next.</p>
-              <div className="mt-2 flex flex-col gap-2">
-                {sim.map(a => (
-                  <button key={a.label} onClick={() => { fx.tap(); a.run() }} className="flex w-full flex-col items-start rounded-[14px] border-2 border-navy bg-[#FFFBF3] px-3 py-2 text-left shadow-[0_3px_0_#00224E] transition-transform active:translate-y-[3px] active:shadow-none">
-                    <span className="text-[14px] font-bold text-navy">{a.label}</span>{a.sub && <span className="text-[12px] text-mid">{a.sub}</span>}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <div className="mt-6 flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.08em] text-mid"><MapPin size={15} />Every screen</div>
-        <nav className="scroll-thin mt-2 min-h-0 flex-1 overflow-y-auto pr-2">
-          {groups.map(g => (
-            <div key={g.title} className="mb-3">
-              <div className="px-2 py-1 text-[12px] font-bold text-faint">{g.title}</div>
-              {g.items.map(i => {
-                const on = i.id === current
-                return (
-                  <button key={i.id} onClick={() => { fx.tap(); onJump(i.id) }} className={cx('relative flex w-full items-center rounded-[10px] px-2 py-1.5 text-left text-[14px] transition-colors', on ? 'font-bold text-navy' : 'text-mid hover:bg-navy/5 hover:text-navy')}>
-                    {on && <motion.span layoutId="stage-cur" className="absolute inset-0 rounded-[10px] bg-paper shadow-card" transition={{ type: 'spring', stiffness: 600, damping: 40 }} />}
-                    <span className="relative">{i.label}</span>
-                  </button>
-                )
-              })}
+    <div className="flex h-full min-h-0 w-full flex-col">
+      <div className="flex items-center gap-3">
+        <span className="flex h-11 w-11 items-center justify-center rounded-[12px] border-2 border-navy font-head text-[24px] font-extrabold" style={{ background: accent }}><span className="pt-1">A</span></span>
+        <div><div className="font-head text-[22px] font-extrabold leading-none">ALIGN</div><div className="mt-1 text-[14px] font-semibold text-mid">{app}</div></div>
+      </div>
+      <p className="mt-4 text-[14px] leading-relaxed text-mid">{tagline}</p>
+      <div className="mt-4 flex gap-2">
+        <Tooltip label={muted ? 'Turn sound and vibration on' : 'Mute sound and vibration'}>
+          <button onClick={() => setMuted(!muted)} className="flex h-10 items-center gap-2 rounded-[12px] border-2 border-navy bg-paper px-3 text-[14px] font-bold shadow-btn active:translate-y-[3px] active:shadow-none">
+            {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}{muted ? 'Sound off' : 'Sound on'}
+          </button>
+        </Tooltip>
+        <Tooltip label="Clear demo data and start again">
+          <button onClick={() => { fx.tap(); onRestart() }} className="flex h-10 items-center gap-2 rounded-[12px] border-2 border-navy bg-paper px-3 text-[14px] font-bold shadow-btn active:translate-y-[3px] active:shadow-none"><RotateCcw size={17} />Restart</button>
+        </Tooltip>
+      </div>
+      <AnimatePresence>
+        {sim.length > 0 && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+            <div className="mt-6 flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.08em] text-navy"><FlaskConical size={15} />Simulate the other side</div>
+            <p className="mt-1 text-[13px] text-mid">What the {app.startsWith('Tech') ? 'student and supervisor' : app.startsWith('Student') ? 'supervisor and technician' : 'students and technicians'} would do next.</p>
+            <div className="mt-2 flex flex-col gap-2">
+              {sim.map(a => (
+                <button key={a.label} onClick={() => { fx.tap(); a.run() }} className="flex w-full flex-col items-start rounded-[14px] border-2 border-navy bg-[#FFFBF3] px-3 py-2 text-left shadow-[0_3px_0_#00224E] transition-transform active:translate-y-[3px] active:shadow-none">
+                  <span className="text-[14px] font-bold text-navy">{a.label}</span>{a.sub && <span className="text-[12px] text-mid">{a.sub}</span>}
+                </button>
+              ))}
             </div>
-          ))}
-        </nav>
-      </aside>}
-      <PhoneBox wide={wide} bg={bg} scale={scale} vp={vp}><Framed.Provider value={wide}>{children}</Framed.Provider></PhoneBox>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <div className="mt-6 flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.08em] text-mid"><MapPin size={15} />Every screen</div>
+      <nav className="scroll-thin mt-2 min-h-0 flex-1 overflow-y-auto pr-2">
+        {groups.map(g => (
+          <div key={g.title} className="mb-3">
+            <div className="px-2 py-1 text-[12px] font-bold text-faint">{g.title}</div>
+            {g.items.map(i => {
+              const on = i.id === current
+              return (
+                <button key={i.id} onClick={() => { fx.tap(); onJump(i.id) }} className={cx('relative flex w-full items-center rounded-[10px] px-2 py-1.5 text-left text-[14px] transition-colors', on ? 'font-bold text-navy' : 'text-mid hover:bg-navy/5 hover:text-navy')}>
+                  {on && <motion.span layoutId="stage-cur" className="absolute inset-0 rounded-[10px] bg-paper shadow-card" transition={{ type: 'spring', stiffness: 600, damping: 40 }} />}
+                  <span className="relative">{i.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        ))}
+      </nav>
     </div>
   )
 }
 
-/** Fake status bar so the phone frame reads as a phone. */
+export function PhoneStage({ app, tagline, accent = '#FFD265', groups, current, onJump, onRestart, children, bg = '#FFFBF3', sim = [] }: {
+  app: string; tagline: string; accent?: string; groups: ScreenGroup[]; current: string; onJump: (id: string) => void; onRestart: () => void; children: ReactNode; bg?: string; sim?: SimAction[]
+}) {
+  const vp = useViewport(); const [open, setOpen] = useState(false)
+  // the review button lives in the empty room beside the app (tablet, laptop). On a phone there is no room and nothing may cover
+  // the app, so it stays away (add ?review to the address to bring it back there).
+  const { k } = frameScale(vp)
+  const room = (vp.w - 390 * k) / 2
+  const asked = typeof location !== 'undefined' && new URLSearchParams(location.search).has('review')
+  const show = room >= 96 || asked
+  return (
+    <>
+      <PhoneBox bg={bg} vp={vp}><Framed.Provider value={false}>{children}</Framed.Provider></PhoneBox>
+      {show && <div style={{ position: 'fixed', right: asked && room < 96 ? 16 : Math.max(12, (room - 150) / 2), bottom: 16, zIndex: 80, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, maxHeight: vp.h - 24 }}>
+        <AnimatePresence>
+          {open && (
+            <motion.div initial={{ opacity: 0, y: 12, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.98 }} transition={{ duration: 0.18 }}
+              className="scroll-thin flex min-h-0 w-[min(320px,calc(100vw-32px))] flex-col overflow-y-auto rounded-[18px] border-2 border-navy bg-[#FFFBF3] p-4 text-navy shadow-[0_4px_0_#00224E]" style={{ maxHeight: vp.h - 90 }}>
+              <ReviewPanel app={app} tagline={tagline} accent={accent} groups={groups} current={current} onJump={id => { onJump(id); setOpen(false) }} onRestart={() => { onRestart(); setOpen(false) }} sim={sim.map(a => ({ ...a, run: () => { setOpen(false); a.run() } }))} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <button type="button" aria-expanded={open} aria-label="Try it: restart, simulate the other side, jump to any screen" onClick={() => { fx.tap(); setOpen(o => !o) }}
+          className="rounded-full border-2 border-navy bg-[#FFD265] px-4 py-2 font-head text-[15px] font-extrabold text-navy shadow-[0_3px_0_#00224E] active:translate-y-[3px] active:shadow-none">{open ? 'Close' : 'Try it'}</button>
+      </div>}
+    </>
+  )
+}
+
+/** Fake status bar (only used when a phone frame is drawn around the app; the app is full screen now, so it stays off). */
 export const StatusBar = ({ dark }: { dark?: boolean }) => !useContext(Framed) ? null : (
   <div className={cx('pointer-events-none absolute inset-x-0 top-0 z-30 flex h-11 items-center justify-between px-7 text-[14px] font-bold', dark ? 'text-white' : 'text-navy')}>
     <span>9:41</span>

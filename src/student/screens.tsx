@@ -421,7 +421,7 @@ export function Detail() {
   ]
   const subs = [stamp(r.at), stamp(r.at + 20 * 60000), `${tf} · ${r.day.toLowerCase()} ${r.slot}`, `${tf} leaves 10 minutes before`, '', 'with your code']
   const binds: Binds = {
-    '226:869': back(nav), '226:829': { text: r.item }, '226:830': { text: `${r.where} · reported ${ago(r.at)}` }, '226:831': { wrap: el => <Reveal dir="y" dur={1}>{el}</Reveal> },
+    '226:869': back(nav), '226:829': { text: r.item, style: { width: 206, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, '226:830': { text: `${r.where} · reported ${ago(r.at)}`, style: { width: 206, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, '226:831': { wrap: el => <Reveal dir="y" dur={1}>{el}</Reveal> },
     '226:862': { onClick: () => nav.go('whatswrong', { p: { id: r.id } }) },
     '226:872': { disabled: r.stage < 4, onClick: () => nav.go('code', { p: { id: r.id } }), text: r.stage >= 5 ? 'See the receipt' : 'Confirm the fix' },
     '226:868': { text: r.stage >= 4 ? `${tf} is done. Check it, then give the code.` : 'Opens after the visit' },
@@ -440,7 +440,7 @@ export function Detail() {
     if (sub) binds[sub] = { text: subs[i], style: { opacity: st === 'todo' ? 0.6 : 1 } }
   })
   const extra = <>
-    <div style={{ position: 'absolute', left: 268, top: 4 }}><ScoreDial value={(r.stage + 1) / 6} cap={null} w={108} dots={6} dotR={5.2} delay={0.5} sound /></div>
+    <div style={{ position: 'absolute', left: 284, top: 4 }}><ScoreDial value={(r.stage + 1) / 6} cap={null} w={98} dots={6} dotR={4.8} delay={0.5} sound /></div>
     {hop && <StepHop key={hop.to} from={centre(hop.from)} to={centre(hop.to)} size={44} delay={0.5} onLand={() => { fx.success(); setHop(null) }}><img src={figArt('226:845')} width={44} height={44} alt="" style={{ display: 'block' }} /></StepHop>}
   </>
   return <F id="226:825" binds={binds} extra={extra} />

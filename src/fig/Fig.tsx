@@ -6,6 +6,7 @@
 import React, { CSSProperties, ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { fx } from '../ds/fx'
 import { artUrl, svgText, preloadAll, allWarm, srcFor } from './preload'
+import { setBackdrop, clearBackdrop } from './backdrop'
 
 export type FNode = {
   i: string; t: string; n: string; x: number; y: number; w: number; h: number
@@ -243,6 +244,8 @@ function LoadDots({ p, w, h }: { p: number; w: number; h: number }) {
 export function Fig({ s, binds = {}, extra, bg, need = [] }: { s: FNode; binds?: Binds; extra?: ReactNode; bg?: string; need?: string[] }) {
   const urls = useMemo(() => urlsOf(s, binds, need), [s.i, need.join('|')])
   const [ready, p] = useScreenReady(s.i + '|' + need.join('|'), urls, s.i)
+  // tell the stage what this screen's background looks like, so the window around the phone frame can carry it on
+  useEffect(() => { if (!ready || bg) return; setBackdrop(s); return () => clearBackdrop(s) }, [ready, s])
   if (!ready) return <div className="fig-root" style={{ position: 'relative', isolation: 'isolate', width: s.w, height: s.h, background: bg || color(s.f), overflow: 'hidden' }}><LoadDots p={p} w={s.w} h={s.h} /></div>
   return (
     <C.Provider value={{ binds }}>

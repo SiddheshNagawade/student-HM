@@ -59,6 +59,15 @@ The beaver now uses seven hand-drawn poses made in his ChatGPT chat, traced to f
 - Sources and the pipeline: `tools/mascot-refs/poses/*.png` (raw images, kept locally and not committed), `tools/mascot-refs/make-vectors.cjs` (needs `npm i sharp @neplex/vectorizer`; the result is in `tools/mascot-refs/vectors/`). In dev, `window.__peek({ mood, say })` shows him for testing.
 - `PeekHost` no longer takes `arts`; `Hanging` and `OfflineBuddy` no longer take `art` or `sign`.
 
-Ideas from his reference images still to explore: half-circle score dial (supervisor load / student request status), blob characters peeking from screen edges, clock-dial scheduler.
+## Extra life (done): `src/fig/extras.tsx`
+Shared file (master in `student-hm/tools/shared/src/fig/`), plays once, never animates text:
+- `ScoreDial`: half-circle of dots plus a needle that swings and settles (supervisor desk "open now" dial; student tracker step dial in the header of `detail`).
+- `InkStamp`: brick stamp mark that falls, squashes and sends out one ink ring (supervisor closure review, on the "after" photo, then the next closure shows).
+- `StepHop`: a token that hops from one step marker to the next (student `detail` when the job moved since the student last looked, tech `done`).
+- `EdgePeeker`: soft blob peeking over a screen edge, blinks once, eyes follow the pointer, tap = it ducks and comes back (student welcome and profile; supervisor fixtures, blocked, disputes, team).
+- The student time wheel's `Sun` is a clock: hour and minute hands turn to the chosen slot.
+- The forecast's two over-the-line dots now hop over to Monday. Do not use framer-motion keyframe arrays together with `initial` or `delay` for new motion: they jumped straight to the end here; drive such motion by hand (see `StepHop`, `InkStamp`).
+- Removed on purpose (they only repeated the screen): desk subtitle sentence, "closure 1 of 6", dispute sub-line, supervisor tech "their phone shows Hindi...", student slot range text, "Optional", what's-wrong helper line, tech job counters (jobs list and done screen).
+
 ## Checking work
 Build: `npx vite build`; preview: `npx vite preview --port 4301`. Use Playwright (390x844 for phone apps, 1440x900 for the desk) to screenshot every screen and catch console errors before pushing. Compare against Figma screenshots when layout changes.

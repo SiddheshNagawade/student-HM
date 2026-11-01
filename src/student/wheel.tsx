@@ -92,15 +92,29 @@ export function TimeWheel({ value, onChange, disabled }: { value: number; onChan
   )
 }
 
-/** A daytime sun in the same hand-drawn line as the Figma moon it replaces (visits are 10 AM to 6 PM). */
-export function Sun() {
+/** A daytime sun in the same hand-drawn line as the Figma moon it replaces (visits are 10 AM to 6 PM).
+    Its face is a clock: the two hands turn to the chosen time (`at`, minutes after midnight) as the wheel turns. */
+export function Sun({ at = 630 }: { at?: number }) {
   const reduce = useReducedMotion()
-  const ref = useRef<SVGGElement>(null)
-  useEffect(() => { if (reduce || !ref.current) return; const a = animate(0, 45, { duration: 1.4, ease: [0.22, 1, 0.36, 1], delay: 0.3, onUpdate: v => ref.current?.setAttribute('transform', `rotate(${v} 32 32)`) }); return () => a.stop() }, [])
+  const rays = useRef<SVGGElement>(null); const hour = useRef<SVGPathElement>(null); const min = useRef<SVGPathElement>(null)
+  const now = useRef(at - 150) // the hands sweep in from a couple of hours earlier the first time
+  const hands = (m: number) => {
+    now.current = m
+    const hp = (a: number, l: number) => `M32 32L${(32 + l * Math.sin((a * Math.PI) / 180)).toFixed(2)} ${(32 - l * Math.cos((a * Math.PI) / 180)).toFixed(2)}`
+    hour.current?.setAttribute('d', hp(m / 2, 6.2)); min.current?.setAttribute('d', hp(m * 6, 9.6))
+  }
+  useEffect(() => { if (reduce || !rays.current) return; const a = animate(0, 45, { duration: 1.4, ease: [0.22, 1, 0.36, 1], delay: 0.3, onUpdate: v => rays.current?.setAttribute('transform', `rotate(${v} 32 32)`) }); return () => a.stop() }, [])
+  useEffect(() => {
+    if (reduce) { hands(at); return }
+    const a = animate(now.current, at, { type: 'spring', stiffness: 70, damping: 13, onUpdate: hands }); return () => a.stop()
+  }, [at])
   return (
     <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-      <g ref={ref}>{Array.from({ length: 8 }, (_, i) => { const a = (i * Math.PI) / 4; return <path key={i} d={`M${32 + 19 * Math.cos(a)} ${32 + 19 * Math.sin(a)}L${32 + 27 * Math.cos(a)} ${32 + 27 * Math.sin(a)}`} stroke="#00224E" strokeWidth="2.6" strokeLinecap="round" /> })}</g>
+      <g ref={rays}>{Array.from({ length: 8 }, (_, i) => { const a = (i * Math.PI) / 4; return <path key={i} d={`M${32 + 19 * Math.cos(a)} ${32 + 19 * Math.sin(a)}L${32 + 27 * Math.cos(a)} ${32 + 27 * Math.sin(a)}`} stroke="#00224E" strokeWidth="2.6" strokeLinecap="round" /> })}</g>
       <path d="M45.5 32C45.6 39.6 39.3 45.8 31.8 45.6C24.4 45.4 18.4 39.5 18.5 31.9C18.6 24.4 24.6 18.3 32.1 18.4C39.5 18.6 45.4 24.5 45.5 32Z" fill="#FFFBF3" stroke="#00224E" strokeWidth="2.6" strokeLinejoin="round" />
+      <path ref={hour} d="M32 32L32 25.8" stroke="#00224E" strokeWidth="2.4" strokeLinecap="round" />
+      <path ref={min} d="M32 32L32 22.4" stroke="#00224E" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="32" cy="32" r="1.8" fill="#00224E" />
     </svg>
   )
 }

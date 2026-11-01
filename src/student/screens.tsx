@@ -7,6 +7,7 @@ import { NavApi } from '../ds/nav'
 import { fx } from '../ds/fx'
 import DATA from './fig.json'
 import { Hanging, peek } from '../fig/mascot'
+import { ScoreDial, StepHop, EdgePeeker } from '../fig/extras'
 import { TimeWheel, Sun, SLOT_START, slotShort, slotRange, goneToday } from './wheel'
 import { store, State, roomCode, nameFrom, IITR, initial, firstName, emptyDraft, code4, active, pushAlert, setReq, ago, stamp, Req } from './store'
 
@@ -60,7 +61,7 @@ function usualFree(s: State) {
 /* ================= Getting in ================= */
 export function Welcome() {
   const nav = useNav()
-  return <F id="227:132" binds={{ '227:200': { onClick: () => nav.go('signin') }, '227:133': { wrap: el => <RiseIn y={40} dur={0.9}>{el}</RiseIn> } }} />
+  return <F id="227:132" binds={{ '227:200': { onClick: () => nav.go('signin') }, '227:133': { wrap: el => <RiseIn y={40} dur={0.9}>{el}</RiseIn> } }} extra={<EdgePeeker side="right" at={520} tone="yellow" delay={1.5} glance={-1} />} />
 }
 
 export function SignIn() {
@@ -234,7 +235,7 @@ export function Doing() {
     '226:237': { text: d.place ? 'What is wrong?' : 'What is it doing?' },
     '226:288': { onClick: () => { fx.shutter(); store.set(x => ({ draft: { ...x.draft, photo: !x.draft.photo } })) }, label: 'Add a photo' },
     '226:289': d.photo ? { render: () => <img src={figArt('226:1219')} width={40} height={40} style={{ marginLeft: -7, marginTop: -7 }} alt="" />, onClick: () => store.set(x => ({ draft: { ...x.draft, photo: false } })) } : { onClick: () => { fx.shutter(); store.set(x => ({ draft: { ...x.draft, photo: true } })) } },
-    '226:293': { text: d.photo ? 'Photo added' : 'Add a photo, if you like' }, '226:294': { text: d.photo ? 'Tap the photo to remove it' : 'Optional' },
+    '226:293': { text: d.photo ? 'Photo added' : 'Add a photo, if you like' }, '226:294': d.photo ? { text: 'Tap the photo to remove it' } : { hide: true },
     '226:296': { text: `You are usually free ${usualFree(s)}` },
     '226:223': isFan ? { wrap: el => <SpinDown cx={195} cy={214}>{el}</SpinDown> } : { hide: true },
     '226:297': { onClick: () => { if (!d.issue) { fx.error(); return } t.trade === 'Electrical' ? nav.go('safety') : nav.go('slot') }, style: { opacity: d.issue ? 1 : 0.55 } },
@@ -288,10 +289,10 @@ export function Slot() {
   }
   const binds: Binds = {
     '226:497': back(nav),
-    '226:446': { render: () => <RiseIn y={30} dur={0.9}><Sun /></RiseIn> },
+    '226:446': { render: () => <RiseIn y={30} dur={0.9}><Sun at={SLOT_START[d.slotIx]} /></RiseIn> },
     '226:427': { hide: true },
     ...Object.fromEntries(['226:429', '226:433', '226:437', '226:441', '226:432', '226:436', '226:440', '226:444'].map(i => [i, { hide: true }])),
-    '226:445': { text: `${slotRange(d.slotIx)} · 30 min`, style: { left: 70, top: 266, width: 250, textAlign: 'center' } },
+    '226:445': { hide: true },
     '226:489': { text: `The warden opens ${code}` },
     '226:482': { onClick: () => { fx[d.letIn ? 'toggleOff' : 'toggleOn'](); store.set(x => ({ draft: { ...x.draft, letIn: !x.draft.letIn } })) }, label: 'Let them in if I am out', render: () => <SvgMod id="226:482" mod={svg => toggleSvg(svg, d.letIn, 'M276 41')} /> },
     '226:490': { onClick: usual },
@@ -366,7 +367,18 @@ export function Dupe() {
 const useReq = () => { const nav = useNav(); const s = useS(); return s.reqs.find(r => r.id === nav.params.id) || active(s) || s.reqs[0] }
 export function Detail() {
   const nav = useNav(); const r = useReq(); const tf = firstName(r.tech)
+  // when the job moves to its next step while this screen is open, a small token hops from the old marker to the new one
+  // (also when the student comes back to this screen after the job has moved on since they last looked)
+  const seenKey = 'align.seen.' + r.id
+  const seen = (() => { try { const v = sessionStorage.getItem(seenKey); return v === null ? -1 : Number(v) } catch { return -1 } })()
+  const prevStage = useRef(seen >= 0 ? seen : r.stage); const [hop, setHop] = useState<{ from: number; to: number } | null>(null)
+  useEffect(() => {
+    if (r.stage > prevStage.current) setHop({ from: prevStage.current, to: r.stage })
+    prevStage.current = r.stage
+    try { sessionStorage.setItem(seenKey, String(r.stage)) } catch { /* private window: no memory of the last look */ }
+  }, [r.stage])
   if (r.part && r.stage < 3) return <Part />
+  const centre = (i: number) => ({ x: 56, y: [152, 236, 320, 404, 488, 572][i] })
   const rows: [string, string, string | null, string | null][] = [
     ['226:833', '226:837', '226:838', 'Reported'], ['226:839', '226:843', '226:844', 'Verified'], ['226:845', '226:849', '226:850', 'Scheduled'],
     ['226:851', '226:853', '226:854', 'On the way'], ['226:855', '226:857', null, 'Visited'], ['226:858', '226:860', '226:861', 'Closed'],
@@ -383,7 +395,7 @@ export function Detail() {
     const st = i < r.stage || r.stage === 5 ? 'done' : i === r.stage ? 'now' : 'todo'
     const file = st === 'done' ? '226:833' : st === 'now' ? '226:845' : '226:851'
     const size = st === 'now' ? 64 : 44; const own = i === 2 ? 64 : 44; const off = (own - size) / 2
-    return { render: () => <PopIn delay={0.1 + i * 0.08}><img src={figArt(file)} width={size} height={size} alt="" style={{ marginLeft: off, marginTop: off, display: 'block' }} /></PopIn>, style: { width: own, height: own } } as const
+    return { render: () => <PopIn key={st} delay={hop ? 1.15 : 0.1 + i * 0.08}><img src={figArt(file)} width={size} height={size} alt="" style={{ marginLeft: off, marginTop: off, display: 'block' }} /></PopIn>, style: { width: own, height: own } } as const
   }
   rows.forEach(([node, title, sub], i) => {
     binds[node] = big(node, i)
@@ -391,7 +403,11 @@ export function Detail() {
     binds[title] = { style: { fontSize: st === 'now' ? 24 : 19, lineHeight: st === 'now' ? '28px' : '24px', opacity: st === 'todo' ? 0.5 : 1 } }
     if (sub) binds[sub] = { text: subs[i], style: { opacity: st === 'todo' ? 0.6 : 1 } }
   })
-  return <F id="226:825" binds={binds} />
+  const extra = <>
+    <div style={{ position: 'absolute', left: 268, top: 4 }}><ScoreDial value={(r.stage + 1) / 6} cap={null} w={108} dots={6} dotR={5.2} delay={0.5} sound /></div>
+    {hop && <StepHop key={hop.to} from={centre(hop.from)} to={centre(hop.to)} size={44} delay={0.5} onLand={() => { fx.success(); setHop(null) }}><img src={figArt('226:845')} width={44} height={44} alt="" style={{ display: 'block' }} /></StepHop>}
+  </>
+  return <F id="226:825" binds={binds} extra={extra} />
 }
 
 export function Near() {
@@ -482,7 +498,7 @@ export function Part() {
       '226:1095': back(nav), '226:1058': { text: r.item }, '226:1059': { text: `${r.where} · 3 students · ${ago(r.at)}` },
       '226:1060': { wrap: el => <Reveal dur={1.4} delay={0.2}>{el}</Reveal> },
       '226:1075': { text: eta.toLocaleDateString('en-IN', { weekday: 'short' }).toUpperCase() }, '226:1076': { text: String(eta.getDate()) }, '226:1077': { text: eta.toLocaleDateString('en-IN', { month: 'short' }) },
-      '226:1079': { text: `A ${r.part || 'part'} is on its way. We will book your slot the moment it arrives. You do not need to do anything.` },
+      '226:1079': { text: `A ${r.part || 'part'} is on its way. We will book your slot the moment it arrives.` },
       '226:1081': { wrap: el => <Reveal dir="y" dur={0.8} delay={0.4}>{el}</Reveal> },
       '226:1091': { text: `${firstName(r.tech)} checked the fitting` }, '226:1093': { text: `Verified, sent to ${firstName(r.tech)}` },
     }} />
@@ -522,7 +538,7 @@ export function WhatsWrong() {
     fx.success(); peek({ mood: 'think', say: 'The supervisor has it.', sub: 'You will hear back today.' }); nav.reset('home')
   }
   const binds: Binds = {
-    '226:1238': back(nav), '226:1213': { text: pick === 2 ? 'Nobody came in your slot.' : pick === 1 ? 'It works, but the fix is poor or unsafe.' : `The ${r.item.toLowerCase()} does not work or still makes noise.` },
+    '226:1238': back(nav), '226:1213': { hide: true },
     '226:1243': { render: () => <textarea value={text} onChange={e => setText(e.target.value)} aria-label="Tell the supervisor what you saw" style={{ width: '100%', height: '100%', border: '2px solid #00224E', borderRadius: 16, background: '#FFFFFF', padding: '14px 16px', fontFamily: '"M PLUS Rounded 1c", sans-serif', fontSize: 13.5, lineHeight: '19px', color: '#00224E', resize: 'none', outline: 'none' }} /> },
     '226:1218': { hide: !!text, style: { pointerEvents: 'none' } },
     '226:1219': { onClick: () => { fx.shutter(); setPhoto(!photo) }, label: 'Add a photo', wrap: el => <div style={{ opacity: photo ? 1 : 0.85 }}>{el}</div> },
@@ -567,7 +583,7 @@ export function Profile() {
       ...row('226:1339', '226:1340', () => nav.go('hours', { p: { edit: true } })),
       ...row('226:1345', '226:1346', () => { location.href = 'mailto:hostel.office@iitr.ac.in?subject=Privacy%20concern' }),
       ...row('226:1350', '226:1351', () => { location.href = 'tel:+911332285311' }),
-    }} />
+    }} extra={<EdgePeeker side="bottom" at={310} tone="blue" delay={1.6} glance={-1} />} />
   )
 }
 

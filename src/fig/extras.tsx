@@ -165,6 +165,101 @@ export function BuildOverlay({ bg = '#FFF1C7', ms = 3600, scale = 1, onDone, lab
   )
 }
 
+/* ------------------------------------------------------------------ ToolLoader */
+const TOOL = (n: string) => `${BASE}fig/tool-${n}.svg`
+export type ToolKind = 'rocket' | 'wrench' | 'bulb'
+/** Pen-sketched tools doing one job, played once over `ms`, then `onDone`.
+    rocket = a screwdriver with a booster zooms across the screen (something is being processed)
+    wrench = a spanner ratchets a nut tight (something is being fixed in place)
+    bulb   = a bulb flickers twice and lights up (something is being checked). Timing is driven by hand. */
+export function ToolLoader({ kind, ms, onDone, scale = 1, sound = true }: { kind: ToolKind; ms?: number; onDone?: () => void; scale?: number; sound?: boolean }) {
+  const reduce = useReducedMotion()
+  const total = ms ?? (kind === 'rocket' ? 1300 : kind === 'wrench' ? 1700 : 1500)
+  const [t, setT] = useState(reduce ? 1 : 0) // 0 to 1 over the whole run
+  const box = useRef<HTMLDivElement>(null); const [W, setW] = useState(390)
+  const flags = useRef({ done: false, n: 0 })
+  useEffect(() => { if (box.current) setW(box.current.offsetWidth || 390) }, [])
+  useEffect(() => {
+    if (reduce) { const k = setTimeout(() => onDone?.(), 450); return () => clearTimeout(k) }
+    if (sound && kind === 'rocket') fx.swoosh()
+    const t0 = performance.now(); let raf = 0
+    const tick = (now: number) => {
+      const e = Math.max(0, Math.min(1, (now - t0) / total)); setT(e) // (the first frame can be stamped a hair before t0)
+      if (e >= 1 && !flags.current.done) { flags.current.done = true; if (sound && kind !== 'rocket') fx.success(); onDone?.() }
+      if (e < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [])
+  const tickOnce = (n: number) => { if (sound && flags.current.n < n) { flags.current.n = n; fx.tick(n % 6) } }
+
+  if (kind === 'rocket') {
+    const dW = 190, dH = dW * 473 / 1199, fW = 170, fH = fW * 622 / 1173
+    const u = Math.pow(t, 2.3), x = -dW - fW + (W + dW + fW + 40) * u
+    const y = Math.sin(t * Math.PI * 3.2) * 7 * (1 - t * 0.4), rot = Math.cos(t * Math.PI * 3.2) * 3 - u * 4
+    const flick = 1 + 0.1 * Math.sin(t * 90), stretch = 0.75 + 1.0 * u
+    return (
+      <div ref={box} role="img" aria-label="Working on it" style={{ position: 'relative', width: '100%', height: 220 * scale, overflow: 'visible' }}>
+        {[-30, -12, 8, 26, 44].map((dy, i) => <span key={i} style={{ position: 'absolute', left: x - fW * stretch - (30 + i * 14), top: 110 + dy - 4, width: (50 + i * 22) * u, height: 4, borderRadius: 3, background: i % 2 ? '#FFD265' : '#00224E', opacity: Math.min(1, u * 3) * (t > 0.92 ? 0 : 0.85) }} />)}
+        <div style={{ position: 'absolute', left: x, top: 110 - dH / 2 + y, width: dW, height: dH, transform: `rotate(${rot}deg)`, transformOrigin: '30% 50%' }}>
+          <img src={TOOL('flame')} alt="" draggable={false} style={{ position: 'absolute', right: dW - 30, top: (dH - fH) / 2, width: fW, height: fH, transformOrigin: '100% 50%', transform: `scale(${stretch * flick}, ${flick})`, opacity: Math.min(1, t * 6) }} />
+          <img src={TOOL('driver')} alt="" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+        </div>
+      </div>
+    )
+  }
+
+  if (kind === 'wrench') {
+    const bW = 124, bH = bW * 1166 / 739, wW = 178, wH = wW * 1118 / 1194
+    const pivot = [wW * 0.555, wH * 0.115], nut = [bW * 0.5, bH * 0.135] // the open jaw sits on the nut, and the wrench turns about it
+    // three ratchet strokes: swing forward fast, ease back a little, rest
+    const STROKES = 3, per = 0.78 / STROKES
+    const p = Math.max(0, (t - 0.1) / per), k = Math.min(STROKES - 1, Math.floor(p)), f = Math.min(1, p - k)
+    const fwd = f < 0.6 ? 1 - Math.pow(1 - f / 0.6, 3) : 1, back = f > 0.75 ? (f - 0.75) / 0.25 : 0
+    const ang = -40 + k * 34 + fwd * 52 - back * 18 + (t > 0.88 ? Math.sin((t - 0.88) * 80) * 2 * (1 - (t - 0.88) / 0.12) : 0)
+    if (t > 0.1 && f > 0.02) tickOnce(k + 1)
+    const shake = t > 0.88 ? Math.sin((t - 0.88) * 140) * 3 * (1 - (t - 0.88) / 0.12) : 0
+    return (
+      <div role="img" aria-label="Tightening" style={{ position: 'relative', width: 260 * scale, height: 230 * scale, margin: '0 auto' }}>
+        <div style={{ position: 'absolute', left: 0, top: 0, width: 260, height: 230, transform: `scale(${scale}) translateX(${shake}px)`, transformOrigin: '0 0' }}>
+          <div style={{ position: 'absolute', left: 70, top: 28, width: bW, height: bH }}>
+            <img src={TOOL('bolt')} alt="" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+            <div style={{ position: 'absolute', left: nut[0] - pivot[0], top: nut[1] - pivot[1], width: wW, height: wH, transformOrigin: `${pivot[0]}px ${pivot[1]}px`, transform: `rotate(${ang}deg)` }}>
+              <img src={TOOL('wrench')} alt="" draggable={false} style={{ width: '100%', height: '100%' }} />
+            </div>
+          </div>
+          {t > 0.9 && [[-6, 10], [118, 4], [58, -14]].map(([sx, sy], i) => <span key={i} style={{ position: 'absolute', left: 70 + sx + 30, top: 28 + sy + 10, width: 5, height: 18, borderRadius: 3, background: '#FFD265', border: '1.5px solid #00224E', transform: `rotate(${[-40, 40, 0][i]}deg) translateY(${-(t - 0.9) * 90}px)`, opacity: 1 - (t - 0.9) / 0.1 }} />)}
+        </div>
+      </div>
+    )
+  }
+
+  // bulb: off, two quick flickers, then on for good
+  const on = (a: number, b: number) => t >= a && t < b
+  const lit = on(0.3, 0.38) || on(0.5, 0.57) || t >= 0.72
+  if (lit && t > 0.3) tickOnce(t >= 0.72 ? 3 : t >= 0.5 ? 2 : 1)
+  const pulse = t >= 0.72 ? 1 + 0.07 * Math.sin(Math.min(1, (t - 0.72) / 0.2) * Math.PI) : 1
+  const bW = 150, bH = bW * 1211 / 1054
+  return (
+    <div role="img" aria-label="Checking" style={{ position: 'relative', width: bW * scale, height: bH * scale, margin: '0 auto' }}>
+      <div style={{ position: 'absolute', left: 0, top: 0, width: bW, height: bH, transform: `scale(${scale * pulse})`, transformOrigin: '50% 45%' }}>
+        <img src={TOOL('bulb0')} alt="" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+        <img src={TOOL('bulb1')} alt="" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: lit ? 1 : 0, transition: 'opacity .05s' }} />
+      </div>
+    </div>
+  )
+}
+
+/** A cover over the whole screen with one tool loader in the middle, for the moments when something is being processed. */
+export function ToolOverlay({ kind, bg = 'rgba(255,251,243,.94)', ms, scale = 1, onDone, label }: { kind: ToolKind; bg?: string; ms?: number; scale?: number; onDone?: () => void; label?: string }) {
+  return (
+    <div style={{ position: 'absolute', inset: 0, zIndex: 70, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }} role="status" aria-live="polite">
+      {label && <span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>{label}</span>}
+      <div style={{ width: '100%' }}><ToolLoader kind={kind} ms={ms} scale={scale} onDone={onDone} /></div>
+    </div>
+  )
+}
+
 /* ------------------------------------------------------------------ StepHop */
 /** A token that hops along an arc from one point to another once, then is gone (the real marker pops in where it lands).
     `from` and `to` are the centres of the two markers, in screen coordinates. */

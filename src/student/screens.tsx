@@ -7,7 +7,7 @@ import { NavApi } from '../ds/nav'
 import { fx } from '../ds/fx'
 import DATA from './fig.json'
 import { Hanging, peek } from '../fig/mascot'
-import { ScoreDial, StepHop, BuildOverlay } from '../fig/extras'
+import { ScoreDial, StepHop, BuildOverlay, ToolOverlay } from '../fig/extras'
 import { TimeWheel, Sun, SLOT_START, slotShort, slotRange, goneToday } from './wheel'
 import { store, State, roomCode, nameFrom, IITR, initial, firstName, emptyDraft, code4, active, pushAlert, setReq, ago, stamp, Req } from './store'
 
@@ -92,7 +92,8 @@ export function Verify() {
   const [code, setCode] = useState(''); const [left, setLeft] = useState(30); const ref = useRef<HTMLInputElement>(null)
   useEffect(() => { const t = setInterval(() => setLeft(x => Math.max(0, x - 1)), 1000); return () => clearInterval(t) }, [])
   const ok = code.length === 6
-  const verify = () => { if (!ok) return; fx.success(); nav.go('isyou') }
+  const [checking, setChecking] = useState(false)
+  const verify = () => { if (!ok || checking) return; setChecking(true) } // the bulb lights up once the code is checked
   const boxes = (
     <div style={{ position: 'relative', display: 'flex', gap: 10, paddingLeft: 2 }} onClick={() => ref.current?.focus()}>
       {Array.from({ length: 6 }, (_, i) => {
@@ -111,7 +112,7 @@ export function Verify() {
       '227:219': { render: () => boxes },
       '227:229': { onClick: verify, disabled: !ok },
       '227:231': left > 0 ? { text: `Resend code in 0:${String(left).padStart(2, '0')}` } : { text: 'Send a new code', onClick: () => { setLeft(30); setCode('') } },
-    }} />
+    }} extra={checking ? <ToolOverlay kind="bulb" bg="#FFF1C7" label="Checking your code" onDone={() => { fx.success(); nav.go('isyou') }} /> : undefined} />
   )
 }
 
@@ -381,14 +382,15 @@ export function Sent() {
 }
 
 export function Dupe() {
-  const nav = useNav()
-  const join = () => {
+  const nav = useNav(); const [busy, setBusy] = useState(false)
+  const join = () => { if (!busy) setBusy(true) } // the spanner tightens, then you are added to the report
+  const doJoin = () => {
     const id = '2398'
     store.set(x => ({ reqs: [{ id, item: 'Tap leaking', issue: 'Leaking', trade: 'Plumbing', where: 'Washroom G-East', at: Date.now() - 3 * 3600000, stage: 1, tech: 'Imran Ali', techTrade: 'Plumber', slot: slotRange(9), day: 'Today', code: code4(), letIn: false, tries: 0, missed: 0 }, ...x.reqs.filter(r => r.id !== id)], current: id, draft: emptyDraft() }))
     pushAlert({ title: 'You joined a report', sub: 'Tap leaking · just now', reqId: id, kind: 'sent' })
     nav.go('sent', { tr: 'plane', p: { id, joined: true } })
   }
-  return <F id="226:715" binds={{ '226:756': back(nav), '226:720': { wrap: el => <PlaceDown>{el}</PlaceDown> }, '226:736': { wrap: el => <PopIn delay={0.4}>{el}</PopIn> }, '226:759': { onClick: join }, '226:753': { onClick: () => nav.go('review') } }} />
+  return <F id="226:715" binds={{ '226:756': back(nav), '226:720': { wrap: el => <PlaceDown>{el}</PlaceDown> }, '226:736': { wrap: el => <PopIn delay={0.4}>{el}</PopIn> }, '226:759': { onClick: join }, '226:753': { onClick: () => nav.go('review') } }} extra={busy ? <ToolOverlay kind="wrench" bg="#FFF1C7" label="Joining the report" onDone={doJoin} /> : undefined} />
 }
 
 /* ================= Follow it ================= */
@@ -535,8 +537,9 @@ export function Part() {
 
 export function Missed() {
   const nav = useNav(); const r = useReq(); const s = useS(); const tf = firstName(r.tech)
-  const [pick, setPick] = useState(0); const [letIn, setLetIn] = useState(r.letIn)
+  const [pick, setPick] = useState(0); const [letIn, setLetIn] = useState(r.letIn); const [busy, setBusy] = useState(false)
   const slotA = ['226:1124', '226:1130', '226:1136']
+  const book = () => { setReq(r.id, { day: opts[pick][0], slot: slotRange(optSlot[pick]), letIn, stage: 2 }); fx.success(); peek({ mood: 'point', say: 'Booked!', sub: letIn ? 'The warden will open the door.' : `${opts[pick][0]}, ${opts[pick][1]}` }); nav.replace('detail', { p: { id: r.id } }) }
   const optSlot = [2, 9, 2] // 11:00 AM tomorrow, 2:30 PM tomorrow, 11:00 AM the day after
   const opts: [string, string][] = [[`${DAYS[1].long.split(',')[0]} ${DAYS[1].num}`, `${slotShort(2)} AM`], [`${DAYS[1].long.split(',')[0]} ${DAYS[1].num}`, `${slotShort(9)} PM`], [`${DAYS[2].label} ${DAYS[2].num}`, `${slotShort(2)} AM`]]
   const texts: [string, string][] = [['226:1128', '226:1129'], ['226:1134', '226:1135'], ['226:1140', '226:1141']]
@@ -547,20 +550,22 @@ export function Missed() {
     '226:1122': { text: `${Math.max(1, r.missed)} of 2` },
     '226:1142': { onClick: () => setLetIn(!letIn), label: 'Let them in if I am out', render: () => <SvgMod id="226:1142" mod={svg => toggleSvg(svg, letIn, 'M276 38')} /> },
     '226:1149': { text: `The warden opens ${roomCode(s)}` },
-    '226:1158': { onClick: () => { setReq(r.id, { day: opts[pick][0], slot: slotRange(optSlot[pick]), letIn, stage: 2 }); fx.success(); peek({ mood: 'point', say: 'Booked!', sub: letIn ? 'The warden will open the door.' : `${opts[pick][0]}, ${opts[pick][1]}` }); nav.replace('detail', { p: { id: r.id } }) } },
+    '226:1158': { onClick: () => { if (!busy) setBusy(true) } },
   }
   slotA.forEach((id, i) => {
     binds[id] = { onClick: () => { fx.tick(i); setPick(i) }, label: `${opts[i][0]} ${opts[i][1]}`, render: () => <img src={figArt(i === pick ? '226:1124' : '226:1130')} width={112} height={95} alt="" /> }
     binds[texts[i][0]] = { text: opts[i][0], style: { pointerEvents: 'none' } }; binds[texts[i][1]] = { text: opts[i][1], style: { pointerEvents: 'none' } }
   })
-  return <F id="226:1098" binds={binds} />
+  return <F id="226:1098" binds={binds} extra={busy ? <ToolOverlay kind="wrench" bg="#FFF1C7" label="Booking your slot" onDone={book} /> : undefined} />
 }
 
 export function WhatsWrong() {
   const nav = useNav(); const r = useReq()
   const [pick, setPick] = useState(0); const [text, setText] = useState(''); const [photo, setPhoto] = useState(false)
   const opts: [string, string, string][] = [['226:1194', '226:1204', 'Still not working'], ['226:1229', '226:1205', 'Fixed badly'], ['226:1206', '226:1212', 'Nobody came']]
-  const send = () => {
+  const [busy, setBusy] = useState(false)
+  const send = () => { if (!busy) setBusy(true) } // the spanner tightens, then the report goes to the supervisor
+  const doSend = () => {
     setReq(r.id, { stage: 1, reopened: true, closedAt: undefined })
     pushAlert({ title: 'Sent to the supervisor', sub: `${r.item} · ${opts[pick][2].toLowerCase()}`, reqId: r.id, kind: 'checked' })
     fx.success(); peek({ mood: 'think', say: 'The supervisor has it.', sub: 'You will hear back today.' }); nav.reset('home')
@@ -577,7 +582,7 @@ export function WhatsWrong() {
     binds[art] = { onClick: () => { fx.select(); setPick(i) }, label: t, render: () => <SvgMod id={art} mod={svg => setFill(svg, 0, i === pick ? '#FFD265' : '#FFFBF3')} /> }
     binds[label] = { style: { pointerEvents: 'none' } }
   })
-  return <F id="226:1189" binds={binds} />
+  return <F id="226:1189" binds={binds} extra={busy ? <ToolOverlay kind="wrench" bg="#FFF1C7" label="Sending to the supervisor" onDone={doSend} /> : undefined} />
 }
 
 /* ================= Alerts, profile, errors ================= */

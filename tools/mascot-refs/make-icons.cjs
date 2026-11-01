@@ -137,6 +137,24 @@ async function runSketches() {
   fs.writeFileSync(path.join(outDir, 'sketch-heroes.json'), JSON.stringify(report, null, 1));
 }
 if (process.argv[4] === 'sketches') { runSketches(); return; }
+// Tool parts for the loaders (pen sketches): tk-<name>.png -> tool-<name>.svg; the bulb pair shares one crop so on/off line up
+async function runTools() {
+  LUM = 150; SPECKLE = 3
+  const report = {};
+  for (const name of ['driver', 'flame', 'wrench', 'bolt']) {
+    const file = path.join(imgDir, `tk-${name}.png`); if (!fs.existsSync(file)) { console.log('missing', file); continue }
+    const { cls, w, h } = await loadCls(file); report[name] = await emit(`tool-${name}`, cls, w, bboxOf(cls, w, 0, 0, w - 1, h - 1));
+  }
+  const pair = []; for (const n of ['bulb0', 'bulb1']) { const file = path.join(imgDir, `tk-${n}.png`); if (fs.existsSync(file)) pair.push(await loadCls(file)); else console.log('missing', file) }
+  if (pair.length === 2) {
+    const { w, h } = pair[0]; let x0 = w, y0 = h, x1 = 0, y1 = 0;
+    for (const { cls } of pair) for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (cls[y * w + x] !== 5) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    const box = [Math.max(0, x0 - 6), Math.max(0, y0 - 6), Math.min(w - 1, x1 + 6), Math.min(h - 1, y1 + 6)];
+    for (let i = 0; i < 2; i++) report['bulb' + i] = await emit(`tool-bulb${i}`, pair[i].cls, w, box);
+  }
+  fs.writeFileSync(path.join(outDir, 'tools.json'), JSON.stringify(report, null, 1));
+}
+if (process.argv[4] === 'tools') { runTools(); return; }
 
 (async () => {
   const report = {};

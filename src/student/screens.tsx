@@ -7,7 +7,7 @@ import { NavApi } from '../ds/nav'
 import { fx } from '../ds/fx'
 import DATA from './fig.json'
 import { Hanging, peek } from '../fig/mascot'
-import { ScoreDial, StepHop, EdgePeeker } from '../fig/extras'
+import { ScoreDial, StepHop } from '../fig/extras'
 import { TimeWheel, Sun, SLOT_START, slotShort, slotRange, goneToday } from './wheel'
 import { store, State, roomCode, nameFrom, IITR, initial, firstName, emptyDraft, code4, active, pushAlert, setReq, ago, stamp, Req } from './store'
 
@@ -61,7 +61,7 @@ function usualFree(s: State) {
 /* ================= Getting in ================= */
 export function Welcome() {
   const nav = useNav()
-  return <F id="227:132" binds={{ '227:200': { onClick: () => nav.go('signin') }, '227:133': { wrap: el => <RiseIn y={40} dur={0.9}>{el}</RiseIn> } }} extra={<EdgePeeker side="right" at={520} tone="yellow" delay={1.5} glance={-1} />} />
+  return <F id="227:132" binds={{ '227:200': { onClick: () => nav.go('signin') }, '227:133': { wrap: el => <RiseIn y={40} dur={0.9}>{el}</RiseIn> } }} />
 }
 
 export function SignIn() {
@@ -583,7 +583,7 @@ export function Profile() {
       ...row('226:1339', '226:1340', () => nav.go('hours', { p: { edit: true } })),
       ...row('226:1345', '226:1346', () => { location.href = 'mailto:hostel.office@iitr.ac.in?subject=Privacy%20concern' }),
       ...row('226:1350', '226:1351', () => { location.href = 'tel:+911332285311' }),
-    }} extra={<EdgePeeker side="bottom" at={310} tone="blue" delay={1.6} glance={-1} />} />
+    }} />
   )
 }
 

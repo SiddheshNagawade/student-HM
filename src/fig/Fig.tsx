@@ -73,8 +73,50 @@ export function textStyle(n: FNode): CSSProperties {
   }
 }
 
-type Ctx = { binds: Binds }
-const C = createContext<Ctx>({ binds: {} })
+/** The language the app is showing. Only the technician app changes it: in English the big and the small line of every Hindi / English pair swap places. */
+export const LangCtx = createContext<'hi' | 'en'>('hi')
+const DEVA = /[ऀ-ॿ]/
+/** Hindi / English pairs on one screen: a Devanagari text and the English text right under it (same parent, same side). id -> its partner. */
+function pairsOf(s: FNode): Map<string, FNode> {
+  const out = new Map<string, FNode>()
+  if (/language/i.test(s.n)) return out // the language chooser names each language in its own words, never swapped
+  const walk = (parent: FNode) => {
+    const texts = (parent.k || []).filter(n => n.t === 'TEX' && n.c && !n.seg)
+    for (const h of texts) {
+      if (!DEVA.test(h.c!) || out.has(h.i)) continue
+      let best: FNode | undefined, bd = 1e9
+      for (const e of texts) {
+        if (e === h || out.has(e.i) || DEVA.test(e.c!) || !/[A-Za-z]/.test(e.c!)) continue
+        const below = e.y - (h.y + h.h), dx = Math.abs(e.x + e.w / 2 - (h.x + h.w / 2)), dl = Math.abs(e.x - h.x)
+        if (below < -26 || below > 34 || (dx > 60 && dl > 14)) continue
+        const d = Math.abs(below) + Math.min(dx, dl) * 0.3
+        if (d < bd) { bd = d; best = e }
+      }
+      if (best) { out.set(h.i, best); out.set(best.i, h) }
+    }
+    ;(parent.k || []).forEach(walk)
+  }
+  walk(s)
+  return out
+}
+let measureCtx: CanvasRenderingContext2D | null = null
+/** A font size at which `text` fits the width of the box it is shown in (swapped lines can be longer than the words they replace). */
+function fitSize(text: string, n: FNode): number | undefined {
+  if (!n.fs || !n.w) return undefined
+  measureCtx ??= document.createElement('canvas').getContext('2d')
+  if (!measureCtx) return undefined
+  const f = fontOf(n.fn)
+  measureCtx.font = `${f.fontWeight || 400} ${n.fs}px ${f.fontFamily || 'sans-serif'}`
+  const w = measureCtx.measureText(text).width
+  return w > n.w ? Math.max(9, Math.floor((n.fs * n.w) / w)) : undefined
+}
+
+/** A Hindi line with no English line beside it can still be shown in English: the app gives a translator (an exact phrase list, plus times). */
+let toEnglish: ((hi: string) => string | undefined) | undefined
+export const setToEnglish = (f: (hi: string) => string | undefined) => { toEnglish = f }
+
+type Ctx = { binds: Binds; pairs: Map<string, FNode>; swap: boolean }
+const C = createContext<Ctx>({ binds: {}, pairs: new Map(), swap: false })
 
 const box = (n: FNode, p: { x: number; y: number }, extra?: CSSProperties): CSSProperties => ({
   position: 'absolute', left: n.x - p.x, top: n.y - p.y, width: n.w, height: n.h, ...extra,
@@ -100,7 +142,11 @@ function KitButton({ n, p, b }: { n: FNode; p: { x: number; y: number }; b?: Bin
 }
 function KitBigButton({ n, p, b }: { n: FNode; p: { x: number; y: number }; b?: Bind }) {
   const [down, setDown] = useState(false)
-  const [hi, en] = Array.isArray(b?.text) ? (b!.text as unknown as [ReactNode, ReactNode]) : [n.txt?.[0], n.txt?.[1]]
+  const [hi0, en0] = Array.isArray(b?.text) ? (b!.text as unknown as [ReactNode, ReactNode]) : [n.txt?.[0], n.txt?.[1]]
+  const lang = useContext(LangCtx)
+  const swap = lang === 'en' && typeof hi0 === 'string' && typeof en0 === 'string'
+  const [hi, en] = swap ? [en0, hi0] : [hi0, en0]
+  const bigFit = swap && typeof hi === 'string' && hi.length > 11 ? Math.max(24, Math.floor(36 * 11 / hi.length) + 4) : 36 // a longer English line gets a smaller size, so it still fits the button
   return (
     <button type="button" disabled={b?.disabled} aria-label={typeof en === 'string' ? en : undefined}
       onPointerDown={() => setDown(true)} onPointerUp={() => setDown(false)} onPointerLeave={() => setDown(false)}
@@ -108,7 +154,7 @@ function KitBigButton({ n, p, b }: { n: FNode; p: { x: number; y: number }; b?: 
       style={{ ...box(n, p), border: '2.5px solid #00224E', borderRadius: 28, background: down ? '#0680DC' : '#0794FF', boxShadow: `0 ${down ? 1 : 6}px 0 #00224E`, transform: `translateY(${down ? 5 : 0}px)`,
         transition: 'transform 60ms, box-shadow 60ms', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '0 24px', textAlign: 'left', cursor: 'pointer', opacity: b?.disabled ? 0.5 : 1, ...b?.style }}>
       <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <span style={{ fontFamily: '"Baloo 2", "Noto Sans Devanagari", sans-serif', fontWeight: 800, fontSize: 36, lineHeight: '40px', color: '#00224E', whiteSpace: 'nowrap' }}>{hi}</span>
+        <span style={{ fontFamily: '"Baloo 2", "Noto Sans Devanagari", sans-serif', fontWeight: 800, fontSize: bigFit, lineHeight: '40px', color: '#00224E', whiteSpace: 'nowrap', animation: swap || lang === 'hi' ? 'figfade .35s ease both' : undefined }} key={lang}>{hi}</span>
         <span style={{ fontFamily: '"M PLUS Rounded 1c", sans-serif', fontSize: 14.5, lineHeight: '20px', color: '#00224E' }}>{en}</span>
       </span>
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M4 14H24M16 22L24 14L16 6" stroke="#00224E" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -156,7 +202,8 @@ function KitIcon({ n, p, b, file, label }: { n: FNode; p: { x: number; y: number
 
 /* ---------------- tree ---------------- */
 function Layer({ n, p }: { n: FNode; p: { x: number; y: number } }) {
-  const { binds } = useContext(C)
+  const { binds, pairs, swap } = useContext(C)
+  const lang = useContext(LangCtx)
   const b = binds[n.i]
   if (b?.hide) return null
   const q = b?.dy ? { ...p, y: p.y - b.dy } : p
@@ -183,13 +230,23 @@ function Layer({ n, p }: { n: FNode; p: { x: number; y: number } }) {
     const inner = b?.wrap ? b.wrap(img, n) : img
     el = b?.onClick
       ? <button type="button" aria-label={b.label || n.n} title={b.label} onClick={() => { fx.tap(); b.onClick!() }} style={{ ...box(n, q, { width: undefined, height: undefined }), padding: 0, border: 0, background: 'none', cursor: 'pointer' }} className="fig-press">{inner}</button>
-      : <div style={{ ...box(n, q, { width: undefined, height: undefined }), ...b?.style }}>{inner}</div>
+      : <div data-beaver={/beaver/i.test(n.n) ? '' : undefined} style={{ ...box(n, q, { width: undefined, height: undefined }), ...b?.style }}>{inner}</div>
   } else if (n.t === 'TEX') {
-    const content = b?.text !== undefined ? b.text : n.seg ? segs(n) : n.c
-    const st: CSSProperties = { ...box(n, q, { height: undefined, minHeight: n.h }), ...textStyle(n), ...b?.style }
+    let content = b?.text !== undefined ? b.text : n.seg ? segs(n) : n.c
+    const partner = lang === 'en' ? pairs.get(n.i) : undefined
+    let fit: number | undefined
+    if (partner) { // English mode: this line shows its partner's words, in this line's own style (big stays big)
+      const pb = binds[partner.i]; const pc = pb?.text !== undefined ? pb.text : partner.c
+      if (typeof pc === 'string') { content = pc; fit = fitSize(pc, n) }
+    } else if (lang === 'en' && swap && typeof content === 'string' && DEVA.test(content)) {
+      const e = toEnglish?.(content)
+      if (e) { content = e; fit = fitSize(e, n) }
+    }
+    const changed = !!partner || (lang === 'en' && content !== (b?.text !== undefined ? b.text : n.c))
+    const st: CSSProperties = { ...box(n, q, { height: undefined, minHeight: n.h }), ...textStyle(n), ...(changed ? { ...(fit ? { fontSize: fit } : null), animation: 'figfade .35s ease both', ...(typeof content === 'string' && DEVA.test(content) && !/Baloo|Devanagari/.test(String(fontOf(n.fn).fontFamily)) ? { fontFamily: '"Baloo 2", "Noto Sans Devanagari", sans-serif' } : null) } : null), ...b?.style }
     el = b?.onClick
-      ? <button type="button" onClick={() => { fx.tap(); b.onClick!() }} style={{ ...st, padding: 0, border: 0, background: 'none', cursor: 'pointer' }} className="fig-link">{content}</button>
-      : <div style={st}>{content}</div>
+      ? <button key={changed ? 'en' : 'hi'} type="button" onClick={() => { fx.tap(); b.onClick!() }} style={{ ...st, padding: 0, border: 0, background: 'none', cursor: 'pointer' }} className="fig-link">{content}</button>
+      : <div key={changed ? 'en' : 'hi'} style={st}>{content}</div>
   } else {
     const st: CSSProperties = { ...box(n, q), background: color(n.f), ...stroke(n.s), borderRadius: n.t === 'ELL' ? '50%' : n.r, boxShadow: shadow(n.e), opacity: n.o, ...b?.style }
     const kids = n.k?.map(k => <Layer key={k.i} n={k} p={{ x: n.x, y: n.y - (b?.dy || 0) + (b?.dy || 0) }} />)
@@ -230,6 +287,20 @@ function useScreenReady(id: string, urls: string[], frameId: string): [boolean, 
 }
 /** The quiet loading state: a row of dots that fill in as things arrive. It only shows if loading takes more than a moment. */
 function LoadDots({ p, w, h }: { p: number; w: number; h: number }) {
+  // the same beaver as the full loader, hammering in place (the pictures are small and are the first thing fetched)
+  const [f, setF] = useState(0)
+  useEffect(() => { const t = setInterval(() => setF(x => (x + 1) % 4), 230); return () => clearInterval(t) }, [])
+  const base = (import.meta as unknown as { env: { BASE_URL: string } }).env.BASE_URL
+  const frame = [1, 1, 2, 2][f]
+  return (
+    <div role="status" aria-label="Loading" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'figfade .25s ease .3s both', pointerEvents: 'none' }}>
+      <div style={{ position: 'relative', width: 112, height: 118 }}>
+        {[1, 2].map(n => <img key={n} src={`${base}fig/build-${n}.svg`} alt="" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', opacity: n === frame ? 1 : 0 }} />)}
+      </div>
+    </div>
+  )
+}
+function LoadDotsOld({ p, w, h }: { p: number; w: number; h: number }) {
   const n = 7
   return (
     <div role="status" aria-label="Loading" style={{ position: 'absolute', left: 0, top: 0, width: w, height: h, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, animation: 'figfade .25s ease .3s both', pointerEvents: 'none' }}>
@@ -243,12 +314,13 @@ function LoadDots({ p, w, h }: { p: number; w: number; h: number }) {
     `need`: extra drawing URLs (for art that is drawn later by a bind) to wait for too. */
 export function Fig({ s, binds = {}, extra, bg, need = [] }: { s: FNode; binds?: Binds; extra?: ReactNode; bg?: string; need?: string[] }) {
   const urls = useMemo(() => urlsOf(s, binds, need), [s.i, need.join('|')])
+  const pairs = useMemo(() => pairsOf(s), [s.i])
   const [ready, p] = useScreenReady(s.i + '|' + need.join('|'), urls, s.i)
   // tell the stage what this screen's background looks like, so the window around the phone frame can carry it on
   useEffect(() => { if (!ready || bg) return; setBackdrop(s); return () => clearBackdrop(s) }, [ready, s])
   if (!ready) return <div className="fig-root" style={{ position: 'relative', isolation: 'isolate', width: s.w, height: s.h, background: bg || color(s.f), overflow: 'hidden' }}><LoadDots p={p} w={s.w} h={s.h} /></div>
   return (
-    <C.Provider value={{ binds }}>
+    <C.Provider value={{ binds, pairs, swap: !/language/i.test(s.n) }}>
       <div className="fig-root" style={{ position: 'relative', isolation: 'isolate', width: s.w, height: s.h, background: bg || color(s.f), overflow: 'hidden' }}>
         {s.k?.map(k => <Layer key={k.i} n={k} p={{ x: 0, y: 0 }} />)}
         {extra}

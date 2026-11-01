@@ -160,9 +160,9 @@ export function BuilderLoader({ ms = 3600, scale = 1, onDone, sound = true }: { 
 }
 
 /** A full-screen cover with the builder scene in the middle (for "sending" and "closing" moments). */
-export function BuildOverlay({ bg = '#FFF1C7', ms = 3600, scale = 1, onDone, label }: { bg?: string; ms?: number; scale?: number; onDone?: () => void; label?: string }) {
+export function BuildOverlay({ bg = '#FFF1C7', ms = 3600, scale = 1, onDone, label, z = 60 }: { bg?: string; ms?: number; scale?: number; onDone?: () => void; label?: string; z?: number }) {
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 60, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="status" aria-live="polite">
+    <div style={{ position: 'absolute', inset: 0, zIndex: z, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="status" aria-live="polite">
       {label && <span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>{label}</span>}
       <BuilderLoader ms={ms} scale={scale} onDone={onDone} />
     </div>
@@ -258,13 +258,9 @@ export function ToolLoader({ kind, ms, onDone, scale = 1, sound = true }: { kind
 }
 
 /** A cover over the whole screen with one tool loader in the middle, for the moments when something is being processed. */
-export function ToolOverlay({ kind, bg = 'rgba(255,251,243,.94)', ms, scale = 1, onDone, label }: { kind: ToolKind; bg?: string; ms?: number; scale?: number; onDone?: () => void; label?: string }) {
-  return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 70, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }} role="status" aria-live="polite">
-      {label && <span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>{label}</span>}
-      <div style={{ width: '100%' }}><ToolLoader kind={kind} ms={ms} scale={scale} onDone={onDone} /></div>
-    </div>
-  )
+export function ToolOverlay({ bg = 'rgba(255,251,243,.96)', ms = 2800, scale = 1, onDone, label }: { kind?: ToolKind; bg?: string; ms?: number; scale?: number; onDone?: () => void; label?: string }) {
+  // one standard loader for every app and every kind of wait: the beaver hammers a pile together (the old rocket / spanner / bulb scenes are retired)
+  return <BuildOverlay bg={bg} ms={ms} scale={scale} onDone={onDone} label={label} z={70} />
 }
 
 /* ------------------------------------------------------------------ StepHop */

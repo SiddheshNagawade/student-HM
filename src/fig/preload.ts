@@ -17,7 +17,10 @@ const decoded = new Set<string>()
 export function warm(url: string, decode = false): Promise<void> {
   let p = inflight.get(url)
   if (!p) {
-    p = fetch(url).then(r => (r.ok ? r.text() : '')).then(t => { if (t) svgText.set(url, t) }).catch(() => undefined)
+    // photographs are fetched as pictures (decoded and kept by the browser); drawings are fetched as text
+    p = /\.(jpe?g|png|webp)($|\?)/i.test(url)
+      ? new Promise<void>(res => { const im = new Image(); im.onload = im.onerror = () => res(); im.src = url })
+      : fetch(url).then(r => (r.ok ? r.text() : '')).then(t => { if (t) svgText.set(url, t) }).catch(() => undefined)
     inflight.set(url, p)
   }
   if (!decode || decoded.has(url)) return p

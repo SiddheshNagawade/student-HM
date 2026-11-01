@@ -5,6 +5,7 @@ import { Fig, FNode, Binds, SvgMod, setFill, figArt } from '../fig/Fig'
 import { SpinDown, PlaneFlight, PLANE_VERIFY, PLANE_SENT, Settle, Hop, WalkIn, Reveal, Slap, StampDown, PopIn, RiseIn, PlaceDown, Flicker, RingsIn } from '../fig/anim'
 import { NavApi } from '../ds/nav'
 import { fx } from '../ds/fx'
+import { takePhoto, Shot } from '../ds/camera'
 import DATA from './fig.json'
 import { Hanging, peek } from '../fig/mascot'
 import { ScoreDial, StepHop, BuildOverlay, ToolOverlay } from '../fig/extras'
@@ -252,8 +253,9 @@ export function Doing() {
     '226:299': back(nav), '226:222': { text: d.place ? where : `${t.item} · ${where}` },
     '226:236': { text: d.place ? `${d.place}. Now, what is wrong?` : `Yes, the ${t.item.toLowerCase()}. Now, what is it doing?` },
     '226:237': { text: d.place ? 'What is wrong?' : 'What is it doing?' },
-    '226:288': { onClick: () => { fx.shutter(); store.set(x => ({ draft: { ...x.draft, photo: !x.draft.photo } })) }, label: 'Add a photo' },
-    '226:289': d.photo ? { render: () => <img src={figArt('226:1219')} width={40} height={40} style={{ marginLeft: -7, marginTop: -7 }} alt="" />, onClick: () => store.set(x => ({ draft: { ...x.draft, photo: false } })) } : { onClick: () => { fx.shutter(); store.set(x => ({ draft: { ...x.draft, photo: true } })) } },
+    // the tile opens the camera (a phone) or the file chooser (a laptop); the picture then sits in the tile, and a tap on it takes it away again
+    '226:288': { onClick: () => { if (d.photo) { fx.deselect(); store.set(x => ({ draft: { ...x.draft, photo: false } })); return } takePhoto().then(p => { if (p) { fx.shutter(); store.set(x => ({ draft: { ...x.draft, photo: p } })) } }) }, label: d.photo ? 'Remove the photo' : 'Add a photo' },
+    '226:289': d.photo ? { render: () => <Shot src={d.photo as string} w={52} h={52} r={14} style={{ marginLeft: -13, marginTop: -13, boxShadow: 'none' }} />, style: { pointerEvents: 'none', overflow: 'visible' } } : { style: { pointerEvents: 'none' } },
     '226:293': { text: d.photo ? 'Photo added' : 'Add a photo, if you like' }, '226:294': d.photo ? { text: 'Tap the photo to remove it' } : { hide: true },
     '226:296': { text: `You are usually free ${usualFree(s)}` },
     '226:223': isFan ? { wrap: el => <SpinDown cx={195} cy={214}>{el}</SpinDown> } : fix ? {
@@ -370,7 +372,7 @@ export function Review() {
       [ids.access]: { text: d.letIn ? 'Warden can let them in' : "I'll be in the room" }, [ids.door]: { text: d.letIn ? `If I'm out, the warden opens ${code}` : `Door open for ${firstName(t.tech[0])}` },
       [ids.note]: { text: `${t.tech[0]}, the ${t.tech[1].toLowerCase()} for your floor, gets this after a supervisor checks it.${d.danger ? ' Marked dangerous: the warden is told now.' : ''}` },
       [ids.btn]: { onClick: submit },
-    }} extra={building ? <BuildOverlay bg="#FFF1C7" ms={3200} scale={0.88} label="Sending your report" onDone={doSubmit} /> : undefined} />
+    }} extra={<>{d.photo && <div style={{ position: 'absolute', left: 322, top: off ? 198 : 154, zIndex: 2 }}><Shot src={d.photo} w={38} h={38} r={9} rot={4} style={{ boxShadow: '2px 3px 0 #00224E' }} /></div>}{building && <BuildOverlay bg="#FFF1C7" ms={3200} scale={0.88} label="Sending your report" onDone={doSubmit} />}</>} />
   )
 }
 
@@ -567,7 +569,7 @@ export function Missed() {
 
 export function WhatsWrong() {
   const nav = useNav(); const r = useReq()
-  const [pick, setPick] = useState(0); const [text, setText] = useState(''); const [photo, setPhoto] = useState(false)
+  const [pick, setPick] = useState(0); const [text, setText] = useState(''); const [photo, setPhoto] = useState<string | false>(false)
   const opts: [string, string, string][] = [['226:1194', '226:1204', 'Still not working'], ['226:1229', '226:1205', 'Fixed badly'], ['226:1206', '226:1212', 'Nobody came']]
   const [busy, setBusy] = useState(false)
   const send = () => { if (!busy) setBusy(true) } // the spanner tightens, then the report goes to the supervisor
@@ -580,8 +582,8 @@ export function WhatsWrong() {
     '226:1238': back(nav), '226:1213': { hide: true },
     '226:1243': { render: () => <textarea value={text} onChange={e => setText(e.target.value)} aria-label="Tell the supervisor what you saw" style={{ width: '100%', height: '100%', border: '2px solid #00224E', borderRadius: 16, background: '#FFFFFF', padding: '14px 16px', fontFamily: '"M PLUS Rounded 1c", sans-serif', fontSize: 13.5, lineHeight: '19px', color: '#00224E', resize: 'none', outline: 'none' }} /> },
     '226:1218': { hide: !!text, style: { pointerEvents: 'none' } },
-    '226:1219': { onClick: () => { fx.shutter(); setPhoto(!photo) }, label: 'Add a photo', wrap: el => <div style={{ opacity: photo ? 1 : 0.85 }}>{el}</div> },
-    '226:1223': { text: photo ? 'Photo added · tap to remove' : 'Add a photo' },
+    '226:1219': { onClick: () => { takePhoto().then(p => { if (p) { fx.shutter(); setPhoto(p) } }) }, label: photo ? 'Take it again' : 'Add a photo', render: photo ? () => <Shot src={photo} w={90} h={90} r={14} rot={-3} /> : undefined, wrap: photo ? undefined : (el => <div style={{ opacity: 0.85 }}>{el}</div>) },
+    '226:1223': { text: photo ? 'Photo added · tap to take it again' : 'Add a photo' },
     '226:1241': { onClick: send },
   }
   opts.forEach(([art, label, t], i) => {

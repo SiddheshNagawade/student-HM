@@ -86,3 +86,14 @@ Shared file (master in `student-hm/tools/shared/src/fig/`), plays once, never an
 
 ## Checking work
 Build: `npx vite build`; preview: `npx vite preview --port 4301`. Use Playwright (390x844 for phone apps, 1440x900 for the desk) to screenshot every screen and catch console errors before pushing. Compare against Figma screenshots when layout changes.
+
+## Round notes: sound, language, camera, navbar, photos, one loader
+- Sound: `src/ds/fx.ts` unlocks audio on the first touch (also a silent blip for iOS); technician voice clips are fetched ahead (`src/tech/voice.ts`, `preloadVoice`) and the speaker shows `loading` (turning ring) then `playing` (yellow, waves pulse) via `SpeakerFx` in `src/tech/screens.tsx`.
+- Language: `LangCtx` in `src/fig/Fig.tsx`. In English every Hindi / English pair on a screen swaps places (big line stays big, font shrinks to fit); lone Hindi lines go through `src/tech/english.ts`. The top toggle is a two-half "हिं | EN" switch (`LangToggle`), the language screen is never swapped.
+- Camera: `src/ds/camera.tsx` (`takePhoto` opens the camera on a phone, the file chooser on a laptop, shrinks to 800 px JPEG; `Shot` draws a photo in the app's frame). Used in student doing / what's wrong / review, technician working polaroids and close-with-photo.
+- Technician bottom bar: `src/tech/dock.tsx` (Jobs, Bag, History, Profile) on jobs, last, bag, history, profile; those screens move their big button up (negative `dy`).
+- Supervisor: round back button (`BackBtn`) on review, closure, blockedOne, disputeOne, fixtureOne, tech, rules; designer notes and arrows removed (same fixture note, same angle note, "Tuesday is the squeeze" and its arrow, the dotted arrow on the desk).
+- Photos: real hostel photographs in `public/photos/*.jpg` (Wikimedia Commons, credits in `public/photos/CREDITS.txt`); supervisor review / closure / disputes / blocked, technician job details ("Photo from the student", or "No photo given"), working polaroids.
+- One loader everywhere: the beaver hammering a pile together (`BuilderLoader` / `BuildOverlay`; `ToolOverlay` now just shows it) and a small hammering beaver while a screen's pictures load. The old rocket / spanner / bulb scenes are retired.
+- One beaver per frame: `src/fig/mascotState.ts`; while the guide beaver peeks, hangs or the offline buddy is up, layers named "Beaver / ..." turn invisible.
+- No sideways scrolling anywhere (`overflow-x: hidden`, `touch-action: pan-y`, supervisor always fits the whole width); vertical pull to refresh is left to the browser.

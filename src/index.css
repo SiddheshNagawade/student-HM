@@ -54,3 +54,6 @@ input::placeholder, textarea::placeholder { color: #3E4F72; opacity: 1; }
   78% { transform: rotate(-2deg); } 90% { transform: rotate(.8deg); } 100% { transform: none; opacity: 1; }
 }
 .fig-press:active { transform: translateY(2px); }
+
+/* Nothing ever scrolls or bounces sideways; only the vertical pull (refresh) is left to the browser. */
+html, body { overflow-x: hidden; overscroll-behavior-x: none; touch-action: pan-y; max-width: 100%; }

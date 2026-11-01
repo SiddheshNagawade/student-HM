@@ -10,6 +10,7 @@
 import { ReactNode, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { figArt } from './Fig'
+import { mascotUp } from './mascotState'
 import { fx } from '../ds/fx'
 
 export type Mood = 'wave' | 'cheer' | 'thumbs' | 'think' | 'point'
@@ -99,6 +100,7 @@ export function PeekHost({ w, h, size, side: defSide = 'left' }: { w: number; h:
   const timer = useRef<number | undefined>(undefined)
   useEffect(() => { preloadMascot() }, [])
   const reduce = useReducedMotion()
+  useEffect(() => { if (!cur) return; mascotUp(1); return () => mascotUp(-1) }, [!!cur]) // while he peeks in, the beaver drawn in the screen steps out
   useEffect(() => {
     const f: Listener = o => {
       window.clearTimeout(timer.current)
@@ -134,6 +136,7 @@ export function Hanging({ title, sub, cx, top = 0, scale = 1, onTap, rope }: {
   const f = useSequence(reduce ? [[0, 0]] : SWING, 'swing')
   const p = POSE[f]
   useEffect(() => { preloadMascot(HANG.ids) }, [])
+  useEffect(() => { mascotUp(1); return () => mascotUp(-1) }, []) // he is the one beaver on this screen
   useEffect(() => { if (!reduce) { const t = setTimeout(() => fx.swoosh(), 80); const t2 = setTimeout(() => fx.paper(), 700); return () => { clearTimeout(t); clearTimeout(t2) } } }, [])
   return (
     <motion.div onClick={onTap} style={{ position: 'absolute', left: cx - W / 2, top, width: W, height: H, pointerEvents: onTap ? 'auto' : 'none', cursor: onTap ? 'pointer' : 'default', zIndex: 40 }}
@@ -161,6 +164,7 @@ export function OfflineBuddy({ offline, title, sub, cx, scale = 1, back }: { off
   const [full, setFull] = useState(true)
   useEffect(() => { preloadMascot(HANG.ids) }, [])
   const was = useRef(offline)
+  useEffect(() => { if (!offline) return; mascotUp(1); return () => mascotUp(-1) }, [offline])
   useEffect(() => {
     if (offline) { setFull(true); const t = setTimeout(() => setFull(false), 4600); return () => clearTimeout(t) }
     if (was.current && back) peek(back)

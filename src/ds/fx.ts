@@ -25,7 +25,7 @@ function ac() {
     const d = noiseBuf.getChannelData(0)
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
   }
-  if (ctx.state === 'suspended') ctx.resume()
+  if (ctx.state !== 'running') ctx.resume().catch(() => undefined) // 'suspended', or 'interrupted' on iOS after a call or a lock
   return ctx
 }
 
@@ -117,7 +117,17 @@ export function useMuted() {
   return useSyncExternalStore(cb => { subs.add(cb); return () => subs.delete(cb) }, () => muted)
 }
 /** Browsers only allow audio after a user gesture: warm the context on first touch. */
+/** Called by the voice player too: one gesture unlocks both Web Audio and plain audio. */
+export const unlockAudio = () => {
+  const c = ac()
+  if (c) { try { const b = c.createBuffer(1, 1, 22050), s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(0) } catch { /* ignore */ } } // a silent blip inside the tap, which iOS needs
+  unlockHooks.forEach(f => f())
+}
+const unlockHooks = new Set<() => void>()
+export const onAudioUnlock = (f: () => void) => { unlockHooks.add(f) }
 if (typeof window !== 'undefined') {
-  const warm = () => { ac(); removeEventListener('pointerdown', warm) }
-  addEventListener('pointerdown', warm)
+  const go = () => { unlockAudio(); for (const e of ['pointerdown', 'touchstart', 'touchend', 'mousedown', 'keydown', 'click']) removeEventListener(e, go, true) }
+  for (const e of ['pointerdown', 'touchstart', 'touchend', 'mousedown', 'keydown', 'click']) addEventListener(e, go, { capture: true, passive: true })
+  // coming back to the tab or the screen waking up can leave the context asleep: wake it on the next sound
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && ctx && ctx.state !== 'running') ctx.resume().catch(() => undefined) })
 }

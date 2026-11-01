@@ -8,7 +8,7 @@ export type Req = {
   stars?: number; tags?: string[]; note?: string; fix?: string; closedAt?: number; tries: number; missed: number; reopened?: boolean
 }
 export type Alert = { id: string; title: string; sub: string; at: number; reqId?: string; kind: 'near' | 'photo' | 'part' | 'sent' | 'closed' | 'checked' }
-export type Draft = { item: string; trade: string; issue: string; issues: string[]; photo: boolean; place: string; floor: string; dayIx: number; slotIx: number; letIn: boolean; danger: boolean; dupe?: string }
+export type Draft = { item: string; trade: string; issue: string; issues: string[]; photo: string | false; place: string; floor: string; dayIx: number; slotIx: number; letIn: boolean; danger: boolean; dupe?: string }
 
 export type State = {
   signedIn: boolean; email: string; name: string; hostel: string; block: string; floor: string; room: string

@@ -6,7 +6,7 @@ import { PeekHost, OfflineBuddy, peek, preloadMascot } from '../fig/mascot'
 import { prefetchBundles, fileUrl } from '../fig/preload'
 
 // once the first screen is up, quietly fetch every other screen's packed drawings (one request each), so later screens appear whole at once
-const BACKGROUND = ['build-1', 'build-2', 'build-3', 'build-log', 'tool-wrench', 'tool-bolt', 'tool-bulb0', 'tool-bulb1']
+const BACKGROUND = ['build-1', 'build-2', 'build-3', 'build-log']
 function warmEverything() { prefetchBundles(allFrames().map(f => f.i), [...BACKGROUND, ...allFixFiles()].map(fileUrl)); setTimeout(() => preloadMascot(), 1500) }
 import { store, active, setReq, pushAlert, code4, workTime } from './store'
 

@@ -33,7 +33,7 @@ function PhoneBox({ bg, vp, children }: { bg: string; vp: VP; children: ReactNod
   const left = Math.round((vp.w - 390 * k) / 2), top = scrolls ? 0 : Math.max(0, Math.round((vp.h - 844 * k) / 2))
   const areaH = scrolls ? Math.max(vp.h, 844 * k) : vp.h
   return (
-    <div style={{ position: 'fixed', left: 0, right: 0, top: vp.top, height: vp.h, background: (screen && colorOf(screen.f)) || bg, overflowX: 'hidden', overflowY: scrolls ? 'auto' : 'hidden', overscrollBehavior: 'contain' }}>
+    <div style={{ position: 'fixed', left: 0, right: 0, top: vp.top, height: vp.h, background: (screen && colorOf(screen.f)) || bg, overflowX: 'hidden', overflowY: scrolls ? 'auto' : 'hidden', overscrollBehaviorX: 'none', touchAction: 'pan-y' }}>
       <div style={{ position: 'relative', width: vp.w, height: areaH }}>
         {/* the screen's own background, carried out to the window edges (no bars, no bezel) */}
         {screen && <div style={{ position: 'absolute', left: 0, top: 0, width: vp.w, height: areaH, pointerEvents: 'none' }}><Backdrop s={screen} k={k} left={left} top={top} vw={vp.w} vh={areaH} solid={scrolls} /></div>}

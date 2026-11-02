@@ -22,10 +22,9 @@ export type ScreenGroup = { title: string; items: { id: string; label: string }[
 export function frameScale(vp: VP, bar = false) {
   const gap = bar ? BAR_GAP : 0 // a little air between the last thing on a screen and the bottom bar
   const fit = Math.min(vp.w / 390, vp.h / (844 + gap))
-  // tablets held sideways and laptops: a phone-shaped column would be a thin strip, so it is drawn large (about half the width) and scrolls up and down
-  const wide = !vp.kb && vp.w >= 700 && vp.w / vp.h > 1.15
-  const roomy = !vp.kb && !wide && fit >= 0.78
-  const raw = vp.kb ? Math.min(vp.w / 390, 1.3) : wide ? Math.min((vp.w * 0.46) / 390, 1.7) : roomy ? Math.min(fit, 2.4) : Math.min(vp.w / 390, 1)
+  // upright phone, tablet, laptop or a sideways tablet: the whole screen is kept in view (never cut off, nothing to scroll). Only a very short window scrolls.
+  const roomy = !vp.kb && fit >= 0.78
+  const raw = vp.kb ? Math.min(vp.w / 390, 1.3) : roomy ? Math.min(fit, 2.4) : Math.min(vp.w / 390, 1)
   // a whole number of pixels wide, so the frame's side edges never fall between two screen pixels (that showed as a faint vertical line)
   return { k: Math.floor(390 * raw) / 390, scrolls: !roomy, gap }
 }

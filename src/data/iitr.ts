@@ -122,6 +122,7 @@ export function createStore<T>(key: string, init: () => T) {
   const save = () => { try { localStorage.setItem(key, JSON.stringify(state)) } catch { /* private mode */ } }
   return {
     get: () => state,
+    subscribe: (f: () => void) => { subs.add(f); return () => { subs.delete(f) } },
     set: (p: Partial<T> | ((s: T) => Partial<T>)) => { state = { ...state, ...(typeof p === 'function' ? p(state) : p) }; save(); subs.forEach(f => f()) },
     reset: () => { state = init(); save(); subs.forEach(f => f()) },
     use: <R,>(sel: (s: T) => R): R => useSyncExternalStore(cb => { subs.add(cb); return () => subs.delete(cb) }, () => sel(state)),

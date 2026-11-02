@@ -56,4 +56,7 @@ input::placeholder, textarea::placeholder { color: #3E4F72; opacity: 1; }
 .fig-press:active { transform: translateY(2px); }
 
 /* Nothing ever scrolls or bounces sideways; only the vertical pull (refresh) is left to the browser. */
-html, body { overflow-x: hidden; overscroll-behavior-x: none; touch-action: pan-y; max-width: 100%; }
+html, body { overflow: hidden; overscroll-behavior: none; touch-action: pan-y; max-width: 100%; }
+/* The page itself is locked like a native app: it never scrolls, bounces or shifts. Only the app's own scroll area moves. */
+body { position: fixed; inset: 0; width: 100%; -webkit-user-select: none; user-select: none; }
+input, textarea { -webkit-user-select: text; user-select: text; }

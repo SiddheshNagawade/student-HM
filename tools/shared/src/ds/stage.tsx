@@ -19,24 +19,27 @@ export type ScreenGroup = { title: string; items: { id: string; label: string }[
     - keyboard open: the visible area is exactly what the keyboard leaves, the frame keeps its width, and the field you are typing in scrolls into view
     One tree for all of these, so the screen (and what you typed) survives a rotate or a resize. */
 /** How big the frame is drawn in this window, and whether the window is too short to show it whole (then it scrolls). */
-export function frameScale(vp: VP) {
-  const fit = Math.min(vp.w / 390, vp.h / 844)
-  const roomy = !vp.kb && fit >= 0.78
-  const raw = vp.kb ? Math.min(vp.w / 390, 1.3) : roomy ? Math.min(fit, 2.4) : Math.min(vp.w / 390, 1)
+export function frameScale(vp: VP, bar = false) {
+  const gap = bar ? BAR_GAP : 0 // a little air between the last thing on a screen and the bottom bar
+  const fit = Math.min(vp.w / 390, vp.h / (844 + gap))
+  // tablets held sideways and laptops: a phone-shaped column would be a thin strip, so it is drawn large (about half the width) and scrolls up and down
+  const wide = !vp.kb && vp.w >= 700 && vp.w / vp.h > 1.15
+  const roomy = !vp.kb && !wide && fit >= 0.78
+  const raw = vp.kb ? Math.min(vp.w / 390, 1.3) : wide ? Math.min((vp.w * 0.46) / 390, 1.7) : roomy ? Math.min(fit, 2.4) : Math.min(vp.w / 390, 1)
   // a whole number of pixels wide, so the frame's side edges never fall between two screen pixels (that showed as a faint vertical line)
-  return { k: Math.floor(390 * raw) / 390, scrolls: !roomy }
+  return { k: Math.floor(390 * raw) / 390, scrolls: !roomy, gap }
 }
-/** Height (in frame units) of an app's bottom bar. The bar is drawn across the whole window and stuck to its bottom edge; the screens keep that much free. */
 export const BAR_H = 60
+export const BAR_GAP = 14
 function PhoneBox({ bg, vp, children, bar }: { bg: string; vp: VP; children: ReactNode; bar?: boolean }) {
   useKeepFocusVisible()
-  const { k, scrolls } = frameScale(vp)
+  const { k, scrolls, gap } = frameScale(vp, !!bar)
   const screen = useBackdrop()
   // with a bottom bar the screen sits on it (any spare room goes above, where the screen's own colour carries on), without one it is centred
-  const left = Math.round((vp.w - 390 * k) / 2), top = scrolls ? 0 : bar ? Math.max(0, vp.h - Math.round(844 * k)) : Math.max(0, Math.round((vp.h - 844 * k) / 2))
-  const areaH = scrolls ? Math.max(vp.h, 844 * k) : vp.h
+  const left = Math.round((vp.w - 390 * k) / 2), top = scrolls ? 0 : bar ? Math.max(0, vp.h - Math.round((844 + gap) * k)) : Math.max(0, Math.round((vp.h - 844 * k) / 2))
+  const areaH = scrolls ? Math.max(vp.h, (844 + gap) * k) : vp.h
   return (
-    <div style={{ position: 'fixed', left: 0, right: 0, top: vp.top, height: vp.h, background: (screen && colorOf(screen.f)) || bg, overflowX: 'hidden', overflowY: scrolls ? 'auto' : 'hidden', overscrollBehaviorX: 'none', touchAction: 'pan-y' }}>
+    <div style={{ position: 'fixed', left: 0, right: 0, top: vp.kb ? vp.top : 0, height: vp.h, background: (screen && colorOf(screen.f)) || bg, overflowX: 'hidden', overflowY: scrolls ? 'auto' : 'hidden', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
       <div style={{ position: 'relative', width: vp.w, height: areaH }}>
         {/* the screen's own background, carried out to the window edges (no bars, no bezel) */}
         {screen && <div style={{ position: 'absolute', left: 0, top: 0, width: vp.w, height: areaH, pointerEvents: 'none' }}><Backdrop s={screen} k={k} left={left} top={top} vw={vp.w} vh={areaH} solid={scrolls} /></div>}
@@ -115,7 +118,7 @@ export function PhoneStage({ app, tagline, accent = '#FFD265', groups, current, 
   const vp = useViewport(); const [open, setOpen] = useState(false)
   // the review button lives in the empty room beside the app (tablet, laptop). On a phone there is no room and nothing may cover
   // the app, so it stays away (add ?review to the address to bring it back there).
-  const { k } = frameScale(vp)
+  const { k } = frameScale(vp, !!bar)
   const room = (vp.w - 390 * k) / 2
   const asked = typeof location !== 'undefined' && new URLSearchParams(location.search).has('review')
   const show = room >= 96 || asked

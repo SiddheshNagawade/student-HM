@@ -5,7 +5,7 @@ export type Stage = 0 | 1 | 2 | 3 | 4 | 5 // reported, verified, scheduled, on t
 export type Req = {
   id: string; item: string; issue: string; trade: string; where: string; at: number; stage: Stage
   tech: string; techTrade: string; slot: string; day: string; code: string; part?: string; letIn: boolean
-  stars?: number; tags?: string[]; note?: string; issues?: string[]; times?: string[]; fix?: string; closedAt?: number; tries: number; missed: number; reopened?: boolean
+  stars?: number; tags?: string[]; note?: string; photo?: string; issues?: string[]; times?: string[]; fix?: string; closedAt?: number; tries: number; missed: number; reopened?: boolean
 }
 export type Alert = { id: string; title: string; sub: string; at: number; reqId?: string; kind: 'near' | 'photo' | 'part' | 'sent' | 'closed' | 'checked' }
 export type Draft = { item: string; trade: string; issue: string; issues: string[]; photo: string | false; place: string; floor: string; dayIx: number; slotIx: number; letIn: boolean; danger: boolean; dupe?: string

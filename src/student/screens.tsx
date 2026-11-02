@@ -427,7 +427,7 @@ export function Review() {
     const id = String(2400 + Math.floor(Math.random() * 99))
     const all = allIssues(d), issueText = all.join(', ') || d.issue
     const tms = (d.times && d.times.length ? d.times : [{ d: d.dayIx, s: d.slotIx }]), e0 = earliest(tms)
-    const r: Req = { id, item: d.place ? `${d.place}: ${issueText}` : t.item, issue: issueText, issues: all, times: tms.map(timeWords), note: d.note || undefined, trade: who.trade, where: d.place ? `${d.place} ${d.floor === 'G' ? 'G' : 'F' + d.floor}` : code, at: Date.now(), stage: 0, tech: who.tech[0], techTrade: who.tech[1], slot: SLOTS[e0.s][1], day: DAYS[e0.d].long, code: code4(), letIn: false, tries: 0, missed: 0 }
+    const r: Req = { id, item: d.place ? `${d.place}: ${issueText}` : t.item, issue: issueText, issues: all, times: tms.map(timeWords), note: d.note || undefined, photo: d.photo || undefined, trade: who.trade, where: d.place ? `${d.place} ${d.floor === 'G' ? 'G' : 'F' + d.floor}` : code, at: Date.now(), stage: 0, tech: who.tech[0], techTrade: who.tech[1], slot: SLOTS[e0.s][1], day: DAYS[e0.d].long, code: code4(), letIn: false, tries: 0, missed: 0 }
     store.set(x => ({ reqs: [r, ...x.reqs], current: id, draft: emptyDraft() }))
     pushAlert({ title: 'Report submitted', sub: `${r.item} · just now`, reqId: id, kind: 'sent' })
     fx.paper(); nav.go('sent', { tr: 'plane', p: { id } })

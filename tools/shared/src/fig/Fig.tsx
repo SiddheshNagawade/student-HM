@@ -27,6 +27,7 @@ export type Bind = {
   disabled?: boolean
   label?: string              // accessible name / hover name for icon-only layers
   dy?: number                 // nudge (for lists that grow)
+  keep?: boolean              // never swap or translate this text with the language switch (the screen gives the right words itself)
 }
 export type Binds = Record<string, Bind>
 
@@ -86,7 +87,7 @@ function pairsOf(s: FNode): Map<string, FNode> {
       if (!DEVA.test(h.c!) || out.has(h.i)) continue
       let best: FNode | undefined, bd = 1e9
       for (const e of texts) {
-        if (e === h || out.has(e.i) || DEVA.test(e.c!) || !/[A-Za-z]/.test(e.c!)) continue
+        if (e === h || out.has(e.i) || DEVA.test(e.c!) || !/[A-Za-z]{3}/.test(e.c!)) continue // a partner is a real English line, not a one or two letter label like BG
         const below = e.y - (h.y + h.h), dx = Math.abs(e.x + e.w / 2 - (h.x + h.w / 2)), dl = Math.abs(e.x - h.x)
         if (below < -26 || below > 34 || (dx > 60 && dl > 14)) continue
         const d = Math.abs(below) + Math.min(dx, dl) * 0.3
@@ -122,9 +123,9 @@ type Ctx = { binds: Binds; pairs: Map<string, FNode>; swap: boolean; lift: numbe
 const C = createContext<Ctx>({ binds: {}, pairs: new Map(), swap: false, lift: 0, cut: 0 })
 /** How far, and from where, the bottom group of a screen must move up to clear the app's bottom bar. The group is everything below the last empty gap, so
     a note and its text, or a button and its caption, always move together. The lift never exceeds the gap above the group (plus a little), so nothing is run over. */
-function bottomLift(s: FNode, pad: number, hidden: (id: string) => boolean): { lift: number; cut: number } {
+function bottomLift(s: FNode, pad: number, info: (id: string) => { hide: boolean; dy: number }): { lift: number; cut: number } {
   const limit = 844 - pad - 4
-  const box = (s.k || []).filter(k => !hidden(k.i) && !(k.h >= 300 && k.y <= 1)).map(k => [k.y, k.y + k.h] as [number, number]).sort((a, b) => a[0] - b[0])
+  const box = (s.k || []).filter(k => !info(k.i).hide && !(k.h >= 300 && k.y <= 1) && !/beaver/i.test(k.n)).map(k => { const y = k.y + info(k.i).dy; return [y, y + k.h] as [number, number] }).sort((a, b) => a[0] - b[0])
   const groups: [number, number][] = []
   for (const b of box) { const g = groups[groups.length - 1]; if (g && b[0] <= g[1] + 16) g[1] = Math.max(g[1], b[1]); else groups.push([b[0], b[1]]) }
   const last = groups[groups.length - 1]
@@ -254,12 +255,12 @@ function Layer({ n, p }: { n: FNode; p: { x: number; y: number } }) {
       : <div data-beaver={/beaver/i.test(n.n) ? '' : undefined} style={{ ...box(n, q, { width: undefined, height: undefined }), ...b?.style }}>{inner}</div>
   } else if (n.t === 'TEX') {
     let content = b?.text !== undefined ? b.text : n.seg ? segs(n) : n.c
-    const partner = lang === 'en' ? pairs.get(n.i) : undefined
+    const partner = lang === 'en' && !b?.keep && !binds[pairs.get(n.i)?.i || '']?.keep ? pairs.get(n.i) : undefined
     let fit: number | undefined
     if (partner) { // English mode: this line shows its partner's words, in this line's own style (big stays big)
       const pb = binds[partner.i]; const pc = pb?.text !== undefined ? pb.text : partner.c
       if (typeof pc === 'string') { content = pc; fit = fitSize(pc, n) }
-    } else if (lang === 'en' && swap && typeof content === 'string' && DEVA.test(content)) {
+    } else if (lang === 'en' && swap && !b?.keep && typeof content === 'string' && DEVA.test(content)) {
       const e = toEnglish?.(content)
       if (e) { content = e; fit = fitSize(e, n) }
     }
@@ -342,7 +343,7 @@ export function Fig({ s, binds = {}, extra, bg, need = [] }: { s: FNode; binds?:
   useEffect(() => { if (!ready || bg) return; setBackdrop(s); return () => clearBackdrop(s) }, [ready, s])
   if (!ready) return <div className="fig-root" style={{ position: 'relative', isolation: 'isolate', width: s.w, height: s.h, background: bg || color(s.f), overflow: 'hidden' }}><LoadDots p={p} w={s.w} h={s.h} /></div>
   return (
-    <C.Provider value={{ binds, pairs, swap: !/language/i.test(s.n), ...(pad ? bottomLift(s, pad, id => !!binds[id]?.hide) : { lift: 0, cut: 0 }) }}>
+    <C.Provider value={{ binds, pairs, swap: !/language/i.test(s.n), ...(pad ? bottomLift(s, pad, id => ({ hide: !!binds[id]?.hide, dy: binds[id]?.dy || 0 })) : { lift: 0, cut: 0 }) }}>
       <div className="fig-root" style={{ position: 'relative', isolation: 'isolate', width: s.w, height: s.h, background: bg || color(s.f), overflow: 'hidden' }}>
         {s.k?.map(k => <Layer key={k.i} n={k} p={{ x: 0, y: 0 }} />)}
         {extra}

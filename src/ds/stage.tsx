@@ -26,11 +26,14 @@ export function frameScale(vp: VP) {
   // a whole number of pixels wide, so the frame's side edges never fall between two screen pixels (that showed as a faint vertical line)
   return { k: Math.floor(390 * raw) / 390, scrolls: !roomy }
 }
-function PhoneBox({ bg, vp, children }: { bg: string; vp: VP; children: ReactNode }) {
+/** Height (in frame units) of an app's bottom bar. The bar is drawn across the whole window and stuck to its bottom edge; the screens keep that much free. */
+export const BAR_H = 60
+function PhoneBox({ bg, vp, children, bar }: { bg: string; vp: VP; children: ReactNode; bar?: boolean }) {
   useKeepFocusVisible()
   const { k, scrolls } = frameScale(vp)
   const screen = useBackdrop()
-  const left = Math.round((vp.w - 390 * k) / 2), top = scrolls ? 0 : Math.max(0, Math.round((vp.h - 844 * k) / 2))
+  // with a bottom bar the screen sits on it (any spare room goes above, where the screen's own colour carries on), without one it is centred
+  const left = Math.round((vp.w - 390 * k) / 2), top = scrolls ? 0 : bar ? Math.max(0, vp.h - Math.round(844 * k)) : Math.max(0, Math.round((vp.h - 844 * k) / 2))
   const areaH = scrolls ? Math.max(vp.h, 844 * k) : vp.h
   return (
     <div style={{ position: 'fixed', left: 0, right: 0, top: vp.top, height: vp.h, background: (screen && colorOf(screen.f)) || bg, overflowX: 'hidden', overflowY: scrolls ? 'auto' : 'hidden', overscrollBehaviorX: 'none', touchAction: 'pan-y' }}>
@@ -104,8 +107,10 @@ function ReviewPanel({ app, tagline, accent, groups, current, onJump, onRestart,
   )
 }
 
-export function PhoneStage({ app, tagline, accent = '#FFD265', groups, current, onJump, onRestart, children, bg = '#FFFBF3', sim = [] }: {
+export function PhoneStage({ app, tagline, accent = '#FFD265', groups, current, onJump, onRestart, children, bg = '#FFFBF3', sim = [], bar }: {
   app: string; tagline: string; accent?: string; groups: ScreenGroup[]; current: string; onJump: (id: string) => void; onRestart: () => void; children: ReactNode; bg?: string; sim?: SimAction[]
+  /** A bottom bar (390 wide, BAR_H high, designed like the screens). It spans the whole window and sits on its bottom edge. */
+  bar?: ReactNode
 }) {
   const vp = useViewport(); const [open, setOpen] = useState(false)
   // the review button lives in the empty room beside the app (tablet, laptop). On a phone there is no room and nothing may cover
@@ -116,7 +121,12 @@ export function PhoneStage({ app, tagline, accent = '#FFD265', groups, current, 
   const show = room >= 96 || asked
   return (
     <>
-      <PhoneBox bg={bg} vp={vp}><Framed.Provider value={false}>{children}</Framed.Provider></PhoneBox>
+      <PhoneBox bg={bg} vp={vp} bar={!!bar}><Framed.Provider value={false}>{children}</Framed.Provider></PhoneBox>
+      {bar && !vp.kb && (
+        <div style={{ position: 'fixed', left: 0, right: 0, top: vp.top + vp.h - BAR_H * k, height: BAR_H * k, zIndex: 30, background: '#FFFBF3', borderTop: `${Math.max(1.5, 2.5 * k)}px solid #00224E`, boxSizing: 'border-box', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', left: Math.round((vp.w - 390 * k) / 2), top: 0, width: 390, height: BAR_H, transform: `scale(${k})`, transformOrigin: '0 0' }}>{bar}</div>
+        </div>
+      )}
       {show && <div style={{ position: 'fixed', right: asked && room < 96 ? 16 : Math.max(12, (room - 150) / 2), bottom: 16, zIndex: 80, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, maxHeight: vp.h - 24 }}>
         <AnimatePresence>
           {open && (

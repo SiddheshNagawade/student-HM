@@ -344,7 +344,10 @@ export function Place() {
   for (const [name, art, label] of PLACES) {
     const on = place === name
     const pick = () => { fx.select(); store.set(x => ({ draft: { ...x.draft, place: name } })) }
-    binds[art] = { onClick: pick, label: name, render: () => <SvgMod id={art} mod={svg => name === 'Washroom' ? (on ? svg : setFill(svg, 1, '#FFFBF3')) : (on ? setFill(svg, 0, '#FFD265') : svg)} /> }
+    // all four places look and behave the same: a cream card with the same hard shadow; the chosen one turns yellow (the drawings came with different shadows and fills)
+    const card = name === 'Corridor' || name === 'Washroom' ? 1 : 0 // which colour in the drawing is the card
+    const plain = (svg: string) => (card === 1 ? svg.replace(/<path[^>]*\/>/, '') : svg) // those two drawings carried their own shadow shape: take it off
+    binds[art] = { onClick: pick, label: name, render: () => <div style={{ filter: 'drop-shadow(3px 4px 0 #00224E)' }}><SvgMod id={art} mod={svg => setFill(plain(svg), 0, on ? '#FFD265' : '#FFFBF3')} /></div> }
     binds[label] = { onClick: pick }
   }
   const floors = ['G', '1', '2', '3']
@@ -513,6 +516,10 @@ export function Detail() {
   })
   const extra = <>
     <div style={{ position: 'absolute', left: 284, top: 4 }}><ScoreDial value={(r.stage + 1) / 6} cap={null} w={98} dots={6} dotR={4.8} delay={0.5} sound /></div>
+    <button type="button" onClick={() => { fx.tap(); nav.reset('home') }} aria-label="Go to home" className="fig-press"
+      style={{ position: 'absolute', right: 24, top: 640, height: 36, padding: '0 16px 0 12px', borderRadius: 18, border: '2.5px solid #00224E', background: '#FFFBF3', boxShadow: '0 3px 0 #00224E', display: 'flex', alignItems: 'center', gap: 8, font: '700 15px/18px "League Spartan", sans-serif', color: '#00224E', cursor: 'pointer' }}>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 11.5L12 4.5l8 7M6.5 10v9h11v-9" stroke="#00224E" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>Go to home
+    </button>
     {hop && <StepHop key={hop.to} from={centre(hop.from)} to={centre(hop.to)} size={44} delay={0.5} onLand={() => { fx.success(); setHop(null) }}><img src={figArt('226:845')} width={44} height={44} alt="" style={{ display: 'block' }} /></StepHop>}
   </>
   return <F id="226:825" binds={binds} extra={extra} />

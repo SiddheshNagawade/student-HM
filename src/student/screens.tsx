@@ -6,6 +6,7 @@ import { SpinDown, PlaneFlight, PLANE_VERIFY, PLANE_SENT, Settle, Hop, WalkIn, R
 import { NavApi } from '../ds/nav'
 import { fx } from '../ds/fx'
 import { takePhoto, Shot } from '../ds/camera'
+import { BHAWANS } from '../ds/bhawans'
 import DATA from './fig.json'
 import { Hanging, peek } from '../fig/mascot'
 import { ScoreDial, StepHop, BuildOverlay, ToolOverlay } from '../fig/extras'
@@ -68,6 +69,7 @@ const SLOTS = SLOT_START.map((_, i) => [slotShort(i), slotRange(i)])
 /** One chosen time as short words: "Tomorrow · 11:00 AM". */
 const timeWords = (t: { d: number; s: number }) => `${DAYS[t.d].label} · ${slotShort(t.s)} ${SLOT_START[t.s] < 720 ? 'AM' : 'PM'}`
 const earliest = (ts: { d: number; s: number }[]) => [...ts].sort((a, b) => a.d - b.d || a.s - b.s)[0]
+const field16: React.CSSProperties = { font: '500 16px/20px "M PLUS Rounded 1c", sans-serif' }
 const pill: React.CSSProperties = { height: 30, boxSizing: 'border-box', borderRadius: 12, border: '2px solid #00224E', background: '#FFFFFF', padding: '0 10px', font: '500 13px/16px "M PLUS Rounded 1c", sans-serif', color: '#00224E', outline: 'none' }
 /* The free-hours grid keeps its four Figma columns; they are the four blocks of the technicians' day (10 AM to 6 PM). */
 const PERIOD = ['10–12', '12–2', '2–4', '4–6']
@@ -150,12 +152,22 @@ export function IsYou() {
 
 export function Where() {
   const nav = useNav(); const s = useS(); const editing = !!nav.params.edit
+  const bhawan = (
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <select value={BHAWANS.includes(s.hostel) ? s.hostel : ''} onChange={e => { fx.select(); store.set({ hostel: e.target.value }) }} aria-label="Bhawan"
+        style={{ width: '100%', height: '100%', boxSizing: 'border-box', appearance: 'none', WebkitAppearance: 'none', borderRadius: 16, border: '2.5px solid #00224E', background: '#FFFFFF', padding: '0 48px 0 18px', font: '500 16px/24px "M PLUS Rounded 1c", sans-serif', color: '#00224E', cursor: 'pointer' }}>
+        {!BHAWANS.includes(s.hostel) && <option value="" disabled>Choose your Bhawan</option>}
+        {BHAWANS.map(b => <option key={b} value={b}>{b}</option>)}
+      </select>
+      <svg width="20" height="20" viewBox="0 0 22 22" fill="none" aria-hidden="true" style={{ position: 'absolute', right: 16, top: 18, pointerEvents: 'none' }}><path d="M4 8l7 7 7-7" stroke="#00224E" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    </div>
+  )
   const up = (k: 'block' | 'floor' | 'room', max: number) => ({ value: s[k], onChange: (v: string) => store.set({ [k]: v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, max) } as Partial<State>), maxLength: max })
   return (
     <F id="227:263" binds={{
       '227:268': back(nav), '227:272': { text: editing ? 'Your room' : 'Step 1 of 2' },
-      '227:277': { input: { value: s.hostel, onChange: v => store.set({ hostel: v }) } },
-      '227:282': { input: up('block', 1) }, '227:286': { input: up('floor', 1) }, '227:290': { input: { ...up('room', 2), inputMode: 'numeric' } },
+      '227:276': { text: 'BHAWAN' }, '227:277': { render: () => bhawan },
+      '227:282': { input: up('block', 1) }, '227:286': { input: up('floor', 1) }, '227:290': { input: { ...up('room', 3), inputMode: 'numeric' } },
       '227:295': { text: roomCode(s) },
       '227:296': { text: editing ? 'Save' : 'Next', onClick: () => editing ? nav.back() : nav.go('hours') },
     }} />
@@ -306,10 +318,10 @@ export function Doing() {
   }
   const extra = (
     <>
-      <input value={d.note || ''} maxLength={140} onChange={e => store.set(x => ({ draft: { ...x.draft, note: e.target.value } }))} placeholder="Describe it for the technician" aria-label="Describe the problem" style={{ ...pill, position: 'absolute', left: 92, top: 662, width: 274 }} />
-      <input value={more} maxLength={40} onChange={e => setMore(e.target.value)} onKeyDown={e => e.key === 'Enter' && addOther()} placeholder="Another problem?" aria-label="Add another problem" style={{ ...pill, position: 'absolute', left: 92, top: 696, width: 220 }} />
-      <button type="button" onClick={addOther} aria-label="Add this problem" className="fig-press" style={{ ...pill, position: 'absolute', left: 318, top: 696, width: 48, padding: 0, background: more.trim() ? '#FFD265' : '#FFFBF3', fontWeight: 700, cursor: 'pointer' }}>Add</button>
-      {others.length > 0 && <div style={{ position: 'absolute', left: 24, top: 734, width: 342, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <input value={d.note || ''} maxLength={140} onChange={e => store.set(x => ({ draft: { ...x.draft, note: e.target.value } }))} placeholder="Describe it for the technician" aria-label="Describe the problem" style={{ ...pill, ...field16, height: 34, position: 'absolute', left: 92, top: 660, width: 274 }} />
+      <input value={more} maxLength={40} onChange={e => setMore(e.target.value)} onKeyDown={e => e.key === 'Enter' && addOther()} placeholder="Another problem?" aria-label="Add another problem" style={{ ...pill, ...field16, height: 34, position: 'absolute', left: 92, top: 698, width: 220 }} />
+      <button type="button" onClick={addOther} aria-label="Add this problem" className="fig-press" style={{ ...pill, height: 34, position: 'absolute', left: 318, top: 698, width: 48, padding: 0, background: more.trim() ? '#FFD265' : '#FFFBF3', fontWeight: 700, cursor: 'pointer' }}>Add</button>
+      {others.length > 0 && <div style={{ position: 'absolute', left: 24, top: 740, width: 342, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {others.map((o, i) => <button key={o + i} type="button" onClick={() => { fx.deselect(); setIssues(picked, others.filter((_, k) => k !== i)) }} aria-label={`Remove ${o}`} className="fig-press" style={{ ...pill, height: 28, background: '#FFD265', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', maxWidth: 160, overflow: 'hidden', whiteSpace: 'nowrap' }}><span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{o}</span><span aria-hidden="true">×</span></button>)}
       </div>}
     </>
@@ -637,7 +649,7 @@ export function WhatsWrong() {
   }
   const binds: Binds = {
     '226:1238': back(nav), '226:1213': { hide: true },
-    '226:1243': { render: () => <textarea value={text} onChange={e => setText(e.target.value)} aria-label="Tell the supervisor what you saw" style={{ width: '100%', height: '100%', border: '2px solid #00224E', borderRadius: 16, background: '#FFFFFF', padding: '14px 16px', fontFamily: '"M PLUS Rounded 1c", sans-serif', fontSize: 13.5, lineHeight: '19px', color: '#00224E', resize: 'none', outline: 'none' }} /> },
+    '226:1243': { render: () => <textarea value={text} onChange={e => setText(e.target.value)} aria-label="Tell the supervisor what you saw" style={{ width: '100%', height: '100%', border: '2px solid #00224E', borderRadius: 16, background: '#FFFFFF', padding: '14px 16px', fontFamily: '"M PLUS Rounded 1c", sans-serif', fontSize: 16, lineHeight: '22px', color: '#00224E', resize: 'none', outline: 'none' }} /> },
     '226:1218': { hide: !!text, style: { pointerEvents: 'none' } },
     '226:1219': { onClick: () => { takePhoto().then(p => { if (p) { fx.shutter(); setPhoto(p) } }) }, label: photo ? 'Take it again' : 'Add a photo', render: photo ? () => <Shot src={photo} w={90} h={90} r={14} rot={-3} /> : undefined, wrap: photo ? undefined : (el => <div style={{ opacity: 0.85 }}>{el}</div>) },
     '226:1223': { text: photo ? 'Photo added · tap to take it again' : 'Add a photo' },

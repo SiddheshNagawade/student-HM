@@ -115,8 +115,25 @@ function fitSize(text: string, n: FNode): number | undefined {
 let toEnglish: ((hi: string) => string | undefined) | undefined
 export const setToEnglish = (f: (hi: string) => string | undefined) => { toEnglish = f }
 
-type Ctx = { binds: Binds; pairs: Map<string, FNode>; swap: boolean }
-const C = createContext<Ctx>({ binds: {}, pairs: new Map(), swap: false })
+/** Height kept free at the bottom of every screen (a bar the app draws there). Layers that would reach into it are moved up just enough. */
+export const BottomPadCtx = createContext(0)
+
+type Ctx = { binds: Binds; pairs: Map<string, FNode>; swap: boolean; lift: number; cut: number }
+const C = createContext<Ctx>({ binds: {}, pairs: new Map(), swap: false, lift: 0, cut: 0 })
+/** How far, and from where, the bottom group of a screen must move up to clear the app's bottom bar. The group is everything below the last empty gap, so
+    a note and its text, or a button and its caption, always move together. The lift never exceeds the gap above the group (plus a little), so nothing is run over. */
+function bottomLift(s: FNode, pad: number, hidden: (id: string) => boolean): { lift: number; cut: number } {
+  const limit = 844 - pad - 4
+  const box = (s.k || []).filter(k => !hidden(k.i) && !(k.h >= 300 && k.y <= 1)).map(k => [k.y, k.y + k.h] as [number, number]).sort((a, b) => a[0] - b[0])
+  const groups: [number, number][] = []
+  for (const b of box) { const g = groups[groups.length - 1]; if (g && b[0] <= g[1] + 16) g[1] = Math.max(g[1], b[1]); else groups.push([b[0], b[1]]) }
+  const last = groups[groups.length - 1]
+  if (!last || last[1] <= limit) return { lift: 0, cut: 0 }
+  const prev = groups[groups.length - 2]
+  const need = Math.min(56, last[1] - limit)
+  const room = prev ? last[0] - prev[1] - 4 : need
+  return { lift: Math.max(0, Math.min(need, room)), cut: last[0] }
+}
 
 const box = (n: FNode, p: { x: number; y: number }, extra?: CSSProperties): CSSProperties => ({
   position: 'absolute', left: n.x - p.x, top: n.y - p.y, width: n.w, height: n.h, ...extra,
@@ -163,6 +180,7 @@ function KitBigButton({ n, p, b }: { n: FNode; p: { x: number; y: number }; b?: 
 }
 function KitInput({ n, p, b }: { n: FNode; p: { x: number; y: number }; b?: Bind }) {
   const [focus, setFocus] = useState(false)
+  if (b?.render) return <div style={{ ...box(n, p), ...b.style }}>{b.render(n)}</div> // the app draws its own field (a list to choose from)
   const inp = b?.input
   const val = inp?.value ?? ''
   const err = inp?.error ?? /error/.test(n.mc || '')
@@ -202,11 +220,14 @@ function KitIcon({ n, p, b, file, label }: { n: FNode; p: { x: number; y: number
 
 /* ---------------- tree ---------------- */
 function Layer({ n, p }: { n: FNode; p: { x: number; y: number } }) {
-  const { binds, pairs, swap } = useContext(C)
+  const { binds, pairs, swap, lift: screenLift, cut } = useContext(C)
   const lang = useContext(LangCtx)
+  const pad = useContext(BottomPadCtx)
   const b = binds[n.i]
   if (b?.hide) return null
-  const q = b?.dy ? { ...p, y: p.y - b.dy } : p
+  // a screen-level layer that would sit under the app's bottom bar is lifted clear of it (largest lift 56 px, so nothing flies far)
+  const lift = pad && screenLift && !b?.dy && p.x === 0 && p.y === 0 && n.y >= cut - 0.5 ? screenLift : 0 // the bottom group moves together, so lines that belong together stay together
+  const q = b?.dy ? { ...p, y: p.y - b.dy } : lift ? { ...p, y: p.y + lift } : p
   if (b?.render && n.t !== 'INS') {
     const inner = b.wrap ? b.wrap(b.render(n), n) : b.render(n)
     return b.onClick
@@ -313,6 +334,7 @@ function LoadDotsOld({ p, w, h }: { p: number; w: number; h: number }) {
     The screen appears only once its drawings and the fonts are all here, so it never shows half drawn and its animations start on a complete screen.
     `need`: extra drawing URLs (for art that is drawn later by a bind) to wait for too. */
 export function Fig({ s, binds = {}, extra, bg, need = [] }: { s: FNode; binds?: Binds; extra?: ReactNode; bg?: string; need?: string[] }) {
+  const pad = useContext(BottomPadCtx)
   const urls = useMemo(() => urlsOf(s, binds, need), [s.i, need.join('|')])
   const pairs = useMemo(() => pairsOf(s), [s.i])
   const [ready, p] = useScreenReady(s.i + '|' + need.join('|'), urls, s.i)
@@ -320,7 +342,7 @@ export function Fig({ s, binds = {}, extra, bg, need = [] }: { s: FNode; binds?:
   useEffect(() => { if (!ready || bg) return; setBackdrop(s); return () => clearBackdrop(s) }, [ready, s])
   if (!ready) return <div className="fig-root" style={{ position: 'relative', isolation: 'isolate', width: s.w, height: s.h, background: bg || color(s.f), overflow: 'hidden' }}><LoadDots p={p} w={s.w} h={s.h} /></div>
   return (
-    <C.Provider value={{ binds, pairs, swap: !/language/i.test(s.n) }}>
+    <C.Provider value={{ binds, pairs, swap: !/language/i.test(s.n), ...(pad ? bottomLift(s, pad, id => !!binds[id]?.hide) : { lift: 0, cut: 0 }) }}>
       <div className="fig-root" style={{ position: 'relative', isolation: 'isolate', width: s.w, height: s.h, background: bg || color(s.f), overflow: 'hidden' }}>
         {s.k?.map(k => <Layer key={k.i} n={k} p={{ x: 0, y: 0 }} />)}
         {extra}

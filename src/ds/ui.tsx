@@ -559,7 +559,7 @@ function ToastView({ t, close }: { t: ToastItem; close: () => void }) {
       initial={{ y: -120, scale: 0.96 }} animate={{ y: 0, scale: 1 }} exit={{ y: -120, opacity: 0 }} transition={spring}
       onClick={tap} className="pointer-events-auto w-full max-w-[380px] cursor-pointer rounded-[22px] border border-navy/10 bg-white/95 p-3.5 shadow-lift backdrop-blur">
       <div className="flex items-center gap-2 text-[12px] font-semibold text-mid">
-        {t.icon ? <span className="flex h-5 w-5 items-center justify-center rounded-[6px] bg-navy text-[11px] text-cream">{t.icon}</span> : <img src={`${(import.meta as unknown as { env: { BASE_URL: string } }).env.BASE_URL}logo.svg`} alt="" width={20} height={20} />}<span style={{ fontFamily: 'Kodchasan, sans-serif', fontWeight: 700 }}>{t.app || 'Align'}</span><span className="ml-auto font-normal">now</span>
+        {t.icon ? <span className="flex h-5 w-5 items-center justify-center rounded-[6px] bg-navy text-[11px] text-cream">{t.icon}</span> : <img src={`${(import.meta as unknown as { env: { BASE_URL: string } }).env.BASE_URL}logo-light.svg`} alt="" width={22} height={19} style={{ maxWidth: 'none' }} />}<span style={{ fontFamily: 'Kodchasan, sans-serif', fontWeight: 700 }}>{t.app || 'Align'}</span><span className="ml-auto font-normal">now</span>
       </div>
       <div className="mt-1.5 text-[15px] font-bold leading-snug">{t.title}</div>
       {t.body && <div className="text-[14px] leading-snug text-ink">{t.body}</div>}

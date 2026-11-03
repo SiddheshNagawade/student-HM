@@ -59,7 +59,7 @@ function ReviewPanel({ app, tagline, accent, groups, current, onJump, onRestart,
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
       <div className="flex items-center gap-3">
-        <img src={`${(import.meta as unknown as { env: { BASE_URL: string } }).env.BASE_URL}logo.svg`} alt="" width={44} height={44} className="shrink-0" style={{ boxShadow: '0 0 0 2px #00224E', borderRadius: 22 }} />
+        <img src={`${(import.meta as unknown as { env: { BASE_URL: string } }).env.BASE_URL}logo-light.svg`} alt="" width={46} height={40} className="shrink-0" style={{ maxWidth: 'none' }} />
         <div><div className="text-[24px] leading-none" style={{ fontFamily: 'Kodchasan, sans-serif', fontWeight: 700 }}>Align</div><div className="mt-1 text-[14px] font-semibold text-mid">{app}</div></div>
       </div>
       <p className="mt-4 text-[14px] leading-relaxed text-mid">{tagline}</p>

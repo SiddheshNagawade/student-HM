@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNav, Stage } from '../ds/nav'
+import { Splash } from '../ds/brand'
 import { PhoneStage, ScreenGroup, SimAction } from '../ds/stage'
 import { AppCtx, ALL, Screen, allFrames, allFixFiles } from './screens'
 import { PeekHost, OfflineBuddy, peek, preloadMascot } from '../fig/mascot'
@@ -81,6 +82,7 @@ function Inner() {
         <Stage nav={nav as never} waveColor="#FFD265"><El /></Stage>
         <OfflineBuddy offline={!s.online} cx={195} scale={1.05} title="No internet" sub="Reconnect to get the latest updates. Your reports wait on this phone." back={{ mood: 'wave', say: 'Back online!', sub: 'Everything is sent.' }} />
         <PeekHost w={390} h={844} size={300} />
+        <Splash bg="#FFF1C7" tone="light" id="align.splash.student" />
       </PhoneStage>
     </AppCtx.Provider>
   )

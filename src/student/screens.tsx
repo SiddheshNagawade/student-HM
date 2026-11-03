@@ -83,10 +83,10 @@ function usualFree(s: State) {
 
 /* ================= Getting in ================= */
 /** The Align mark in front of the Figma "Align" wordmark (Kodchasan Bold), sized to the wordmark. */
-const LOGO_SRC = `${(import.meta as unknown as { env: { BASE_URL: string } }).env.BASE_URL}logo.svg`
+const LOGO_SRC = `${(import.meta as unknown as { env: { BASE_URL: string } }).env.BASE_URL}logo-light.svg`
 const wordmark = (light = false): Bind => ({ style: { width: 'auto', whiteSpace: 'nowrap' }, render: (n: FNode) => (
   <span style={{ display: 'flex', alignItems: 'center', gap: Math.round((n.fs || 26) * 0.35), height: n.h }}>
-    <img src={LOGO_SRC} alt="" width={Math.round((n.fs || 26) * 1.15)} height={Math.round((n.fs || 26) * 1.15)} style={{ borderRadius: '50%', boxShadow: light ? 'none' : '0 0 0 2px #00224E', flexShrink: 0 }} />
+    <img src={LOGO_SRC} alt="" width={Math.round((n.fs || 26) * 1.3)} height={Math.round((n.fs || 26) * 1.12)} style={{ flexShrink: 0, maxWidth: 'none' }} />
     <span style={{ ...textStyle(n), lineHeight: `${n.h}px`, width: 'auto' }}>{n.c}</span>
   </span>
 ) })

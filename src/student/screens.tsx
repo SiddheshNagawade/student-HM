@@ -1,7 +1,7 @@
 /* Student app: every screen is the Figma frame itself (see ../fig/Fig.tsx). This file only attaches
    behaviour and live data to the Figma layers, by their node ids. */
 import React, { ReactNode, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { Fig, FNode, Binds, SvgMod, setFill, figArt } from '../fig/Fig'
+import { Fig, FNode, Bind, Binds, SvgMod, setFill, figArt, textStyle } from '../fig/Fig'
 import { SpinDown, PlaneFlight, PLANE_VERIFY, PLANE_SENT, Settle, Hop, WalkIn, Reveal, Slap, StampDown, PopIn, RiseIn, PlaceDown, Flicker, RingsIn } from '../fig/anim'
 import { NavApi } from '../ds/nav'
 import { fx } from '../ds/fx'
@@ -82,9 +82,18 @@ function usualFree(s: State) {
 }
 
 /* ================= Getting in ================= */
+/** The Align mark in front of the Figma "Align" wordmark (Kodchasan Bold), sized to the wordmark. */
+const LOGO_SRC = `${(import.meta as unknown as { env: { BASE_URL: string } }).env.BASE_URL}logo.svg`
+const wordmark = (light = false): Bind => ({ style: { width: 'auto', whiteSpace: 'nowrap' }, render: (n: FNode) => (
+  <span style={{ display: 'flex', alignItems: 'center', gap: Math.round((n.fs || 26) * 0.35), height: n.h }}>
+    <img src={LOGO_SRC} alt="" width={Math.round((n.fs || 26) * 1.15)} height={Math.round((n.fs || 26) * 1.15)} style={{ borderRadius: '50%', boxShadow: light ? 'none' : '0 0 0 2px #00224E', flexShrink: 0 }} />
+    <span style={{ ...textStyle(n), lineHeight: `${n.h}px`, width: 'auto' }}>{n.c}</span>
+  </span>
+) })
+
 export function Welcome() {
   const nav = useNav()
-  return <F id="227:132" binds={{ '227:200': { onClick: () => nav.go('signin') }, '227:133': { wrap: el => <RiseIn y={40} dur={0.9}>{el}</RiseIn> } }} />
+  return <F id="227:132" binds={{ '227:197': wordmark(), '227:200': { onClick: () => nav.go('signin') }, '227:133': { wrap: el => <RiseIn y={40} dur={0.9}>{el}</RiseIn> } }} />
 }
 
 export function SignIn() {
@@ -97,6 +106,7 @@ export function SignIn() {
   }
   if (bad) return (
     <F id="228:531" binds={{
+      '228:594': wordmark(),
       '228:608': { input: { value: email, onChange: v => { setEmail(v); if (IITR.test(v.trim())) setBad(false) }, error: true, type: 'email', inputMode: 'email', autoFocus: true, onEnter: go, placeholder: 'name@design.iitr.ac.in' } },
       '228:596': { hide: true }, '228:599': { onClick: () => { setEmail(''); setBad(false) }, label: 'Clear' },
       '228:601': { text: 'needs to end in iitr.ac.in, like name@design.iitr.ac.in' }, '228:606': { onClick: go },
@@ -104,6 +114,7 @@ export function SignIn() {
   )
   return (
     <F id="228:449" binds={{
+      '228:515': wordmark(),
       '228:528': { input: { value: email, onChange: setEmail, type: 'email', inputMode: 'email', autoFocus: true, onEnter: go, placeholder: 'name@design.iitr.ac.in' } },
       '228:517': { hide: true }, '228:526': { onClick: go },
     }} />

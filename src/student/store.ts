@@ -32,6 +32,32 @@ const seed = (): State => ({
 })
 export const store = createStore<State>('align.student.fig.v3', seed)
 
+/* Saved data can come from an older version of the app (on this phone, or from the live link). Fill in anything
+   missing so a screen never meets a half-made request, and drop anything that is not a request at all. */
+const str = (v: unknown, d = '') => (typeof v === 'string' ? v : d)
+const num = (v: unknown, d = 0) => (typeof v === 'number' && isFinite(v) ? v : d)
+const strs = (v: unknown) => (Array.isArray(v) ? v.filter(x => typeof x === 'string') : undefined)
+export function fixReq(r: unknown): Req | null {
+  if (!r || typeof r !== 'object') return null
+  const x = r as Record<string, unknown>
+  if (!str(x.id) || !str(x.item)) return null
+  const stage = Math.max(0, Math.min(5, Math.round(num(x.stage)))) as Stage
+  return {
+    ...(x as unknown as Req), id: str(x.id), item: str(x.item), issue: str(x.issue), trade: str(x.trade, 'Electrical'), where: str(x.where, 'BG04'), at: num(x.at, Date.now()), stage,
+    tech: str(x.tech, 'Ravi Kumar'), techTrade: str(x.techTrade, 'Electrician'), slot: str(x.slot, '11:00 to 11:30 AM'), day: str(x.day, 'Today'), code: str(x.code, '0000'),
+    letIn: !!x.letIn, tries: num(x.tries), missed: num(x.missed), issues: strs(x.issues), times: strs(x.times), tags: strs(x.tags),
+  }
+}
+try {
+  const s0 = store.get()
+  store.set({
+    draft: { ...emptyDraft(), ...(s0.draft && typeof s0.draft === 'object' ? s0.draft : {}) },
+    reqs: (Array.isArray(s0.reqs) ? s0.reqs : []).map(fixReq).filter((r): r is Req => !!r),
+    alerts: Array.isArray(s0.alerts) ? s0.alerts : [],
+    hours: Array.isArray(s0.hours) && s0.hours.length === 7 ? s0.hours : seed().hours,
+  })
+} catch { store.reset() }
+
 export const roomCode = (s: Pick<State, 'block' | 'floor' | 'room'>) => `${(s.block || 'B').toUpperCase()}${(s.floor || 'G').toUpperCase()}${(s.room || '04').padStart(2, '0')}`
 export const firstName = (name: string) => (name || 'Siddhi').split(' ')[0]
 export const initial = (name: string) => (name || 'S').trim()[0]?.toUpperCase() || 'S'

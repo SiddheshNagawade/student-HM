@@ -243,7 +243,7 @@ export function Home() {
     void stageWord
   }
   // the first time the room is shown, each tappable thing glows once in turn
-  const [hint] = useState(() => { const seen = sessionStorage.getItem('align.hint.room'); sessionStorage.setItem('align.hint.room', '1'); return !seen })
+  const [hint] = useState(() => { try { const seen = sessionStorage.getItem('align.hint.room'); sessionStorage.setItem('align.hint.room', '1'); return !seen } catch { return false } })
   const [hit, setHit] = useState('')
   useEffect(() => { if (!hint) return; const t = setTimeout(() => peek({ mood: 'point', side: 'right', say: 'Tap whatever broke.', ms: 3200 }), 2700); return () => clearTimeout(t) }, [])
   const tap = (k: string) => { setHit(k); setTimeout(() => start(k), 170) }

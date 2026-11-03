@@ -8,7 +8,7 @@ import { animate, useReducedMotion } from 'framer-motion'
 import { fx } from '../ds/fx'
 import { useAssets } from './preload'
 
-const NAVY = '#00224E', CREAM = '#FFFBF3', YELLOW = '#FFD265', BRICK = '#B8530A'
+const NAVY = '#00224E', CREAM = '#FFFBF3', BRICK = '#B8530A'
 
 /* ------------------------------------------------------------------ ScoreDial */
 /** Half-circle of dots. `value` is 0 to 1 along the arc; dots past `cap` are the "over" zone (brick).
@@ -49,7 +49,7 @@ export function ScoreDial({ value, w = 220, dots = 15, dotR, cap = 0.8, sound = 
         <g transform={`rotate(${ang} ${cx} ${cy})`}>
           <path d={`M${cx - 6} ${cy + 0.5}C${cx - R * 0.4} ${cy - 2.5} ${cx - R * 0.65} ${cy + 1.5} ${cx - R * 0.8} ${cy}`} stroke={NAVY} strokeWidth={Math.max(3, w * 0.02)} strokeLinecap="round" />
         </g>
-        <circle cx={cx} cy={cy} r={Math.max(6, w * 0.045)} fill={YELLOW} stroke={NAVY} strokeWidth={2.6} />
+        <circle cx={cx} cy={cy} r={Math.max(6, w * 0.045)} stroke={NAVY} strokeWidth={2.6} style={{ fill: 'var(--accent, #FFD265)' }} />
       </svg>
       {children && <div style={{ position: 'absolute', left: 0, right: 0, top: cy + dr + 12, textAlign: 'center', pointerEvents: 'none' }}>{children}</div>}
     </div>
@@ -145,7 +145,7 @@ export function BuilderLoader({ ms = 3600, scale = 1, onDone, sound = true }: { 
     const q = (t - (LEAD + k * step + step * 0.5)) / 420
     if (q < 0 || q > 1) return null
     const vx = [34, 58, 22, 70][c], vy = [-70, -52, -88, -40][c]
-    return <span key={c} style={{ position: 'absolute', left: 168 + vx * q, top: 262 + vy * q + 120 * q * q, width: 7, height: 7, borderRadius: 2, background: c % 2 ? '#E3B987' : '#FFD265', border: '1.5px solid #00224E', opacity: 1 - q, transform: `rotate(${q * 220}deg)` }} />
+    return <span key={c} style={{ position: 'absolute', left: 168 + vx * q, top: 262 + vy * q + 120 * q * q, width: 7, height: 7, borderRadius: 2, background: c % 2 ? '#E3B987' : 'var(--accent, #FFD265)', border: '1.5px solid #00224E', opacity: 1 - q, transform: `rotate(${q * 220}deg)` }} />
   }) : null
   return (
     <div role="img" aria-label="Building" style={{ position: 'relative', width: 360 * scale, height: 300 * scale }}>
@@ -207,7 +207,7 @@ export function ToolLoader({ kind, ms, onDone, scale = 1, sound = true }: { kind
     const flick = 1 + 0.1 * Math.sin(t * 90), stretch = 0.75 + 1.0 * u
     return (
       <div ref={box} role="img" aria-label="Working on it" style={{ position: 'relative', width: '100%', height: 220 * scale, overflow: 'visible' }}>
-        {[-30, -12, 8, 26, 44].map((dy, i) => <span key={i} style={{ position: 'absolute', left: x - fW * stretch - (30 + i * 14), top: 110 + dy - 4, width: (50 + i * 22) * u, height: 4, borderRadius: 3, background: i % 2 ? '#FFD265' : '#00224E', opacity: Math.min(1, u * 3) * (t > 0.92 ? 0 : 0.85) }} />)}
+        {[-30, -12, 8, 26, 44].map((dy, i) => <span key={i} style={{ position: 'absolute', left: x - fW * stretch - (30 + i * 14), top: 110 + dy - 4, width: (50 + i * 22) * u, height: 4, borderRadius: 3, background: i % 2 ? 'var(--accent, #FFD265)' : '#00224E', opacity: Math.min(1, u * 3) * (t > 0.92 ? 0 : 0.85) }} />)}
         <div style={{ position: 'absolute', left: x, top: 110 - dH / 2 + y, width: dW, height: dH, transform: `rotate(${rot}deg)`, transformOrigin: '30% 50%' }}>
           <img src={TOOL('flame')} alt="" draggable={false} style={{ position: 'absolute', right: dW - 30, top: (dH - fH) / 2, width: fW, height: fH, transformOrigin: '100% 50%', transform: `scale(${stretch * flick}, ${flick})`, opacity: Math.min(1, t * 6) }} />
           <img src={TOOL('driver')} alt="" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
@@ -235,7 +235,7 @@ export function ToolLoader({ kind, ms, onDone, scale = 1, sound = true }: { kind
               <img src={TOOL('wrench')} alt="" draggable={false} style={{ width: '100%', height: '100%' }} />
             </div>
           </div>
-          {t > 0.9 && [[-6, 10], [118, 4], [58, -14]].map(([sx, sy], i) => <span key={i} style={{ position: 'absolute', left: 70 + sx + 30, top: 28 + sy + 10, width: 5, height: 18, borderRadius: 3, background: '#FFD265', border: '1.5px solid #00224E', transform: `rotate(${[-40, 40, 0][i]}deg) translateY(${-(t - 0.9) * 90}px)`, opacity: 1 - (t - 0.9) / 0.1 }} />)}
+          {t > 0.9 && [[-6, 10], [118, 4], [58, -14]].map(([sx, sy], i) => <span key={i} style={{ position: 'absolute', left: 70 + sx + 30, top: 28 + sy + 10, width: 5, height: 18, borderRadius: 3, background: 'var(--accent, #FFD265)', border: '1.5px solid #00224E', transform: `rotate(${[-40, 40, 0][i]}deg) translateY(${-(t - 0.9) * 90}px)`, opacity: 1 - (t - 0.9) / 0.1 }} />)}
         </div>
       </div>
     )

@@ -15,7 +15,7 @@ import { TimeWheel, Sun, SLOT_START, slotShort, slotRange, goneToday } from './w
 import { store, State, roomCode, nameFrom, IITR, initial, firstName, emptyDraft, code4, active, pushAlert, setReq, ago, stamp, Req } from './store'
 
 export type Screen = 'welcome' | 'signin' | 'verify' | 'isyou' | 'where' | 'hours' | 'allow' | 'homeEmpty' | 'home' | 'doing' | 'safety' | 'place' | 'slot' | 'review' | 'sent' | 'dupe'
-  | 'detail' | 'near' | 'code' | 'wrong' | 'rate' | 'closed' | 'part' | 'missed' | 'whatswrong' | 'alerts' | 'profile' | 'offline' | 'e500' | 'expired' | 'e404'
+  | 'detail' | 'near' | 'code' | 'wrong' | 'done' | 'rate' | 'closed' | 'part' | 'missed' | 'whatswrong' | 'alerts' | 'profile' | 'offline' | 'e500' | 'expired' | 'e404'
 type Ctx = { nav: NavApi<Screen> }
 export const AppCtx = createContext<Ctx>(null!)
 const useNav = () => useContext(AppCtx).nav
@@ -553,6 +553,8 @@ export function Near() {
 
 export function Code() {
   const nav = useNav(); const r = useReq(); const s = useS(); const tf = firstName(r.tech); const t = Object.values(THINGS).find(x => x.item === r.item)
+  // the technician typed this code on their phone and the job closed: show the work-done screen
+  useEffect(() => { if (r.stage >= 5) nav.replace('done', { tr: 'board', p: { id: r.id } }) }, [r.stage])
   return (
     <F id="226:909" binds={{
       '226:910': { wrap: el => <Settle>{el}</Settle> },
@@ -561,6 +563,45 @@ export function Code() {
       '226:923': { text: `${roomCode(s)} · ${r.item.toLowerCase()}` }, '226:924': { text: r.code.split('').join(' ') },
       '226:925': { text: `Give ${tf} this code only when you are happy.` },
       '226:927': { onClick: () => nav.go('whatswrong', { p: { id: r.id } }) },
+    }} />
+  )
+}
+
+/* Work done: shown once the technician types the student's code and the job closes.
+   Built from the Figma "Report sent" frame (same yellow, beaver, title, tag, button and link);
+   the plane is swapped for the fixed thing with the green tick stamp from the "Closed" ticket. */
+const SENT = D['226:569']
+const DONE_FRAME: FNode = {
+  ...SENT, n: 'Student · Work done',
+  k: [...SENT.k!.filter(k => k.i !== '226:582'), { i: 'done:art', t: 'FRA', n: 'fixed', x: 45, y: 392, w: 300, h: 232 } as FNode, { i: 'done:who', t: 'TEX', n: 'who', x: 24, y: 636, w: 342, h: 22, f: '#00224E', c: 'Fixed by Ravi', fn: 'Rounded Mplus 1c Regular', fs: 15, lh: 22, al: 'C' } as FNode],
+}
+const thingKey = (item: string) => Object.keys(THINGS).find(k => THINGS[k].item === item || item.startsWith(k + ':')) || 'fan'
+export function Done() {
+  const nav = useNav(); const r = useReq(); const s = useS(); const key = thingKey(r.item); const fix = key === 'fan' ? undefined : FIX[key]
+  useEffect(() => { fx.success() }, [])
+  const pic = fix ? figArt(`fix-${fix.hero}-hero`) : figArt('226:223')
+  const art = (
+    <div style={{ position: 'relative', width: 300, height: 232 }}>
+      <div style={{ position: 'absolute', left: 30, top: 0, width: 232, height: 232, overflow: 'hidden' }}>
+        <Settle delay={0.3}>
+          {fix
+            ? <img src={pic} alt="" draggable={false} style={{ display: 'block', width: 232, height: 232, objectFit: 'contain' }} />
+            : <div style={{ width: 290, height: 312, marginLeft: -29, marginTop: -44 }}><SpinDown cx={145} cy={159} delay={0.5} turns={2}><img src={pic} alt="" draggable={false} style={{ display: 'block', width: 290, height: 312, maxWidth: 'none' }} /></SpinDown></div>}
+        </Settle>
+      </div>
+      <div style={{ position: 'absolute', right: 0, bottom: 4, width: 104, height: 104 }}>
+        <StampDown delay={0.95}><img src={figArt('226:945')} alt="" width={104} height={104} draggable={false} style={{ display: 'block' }} /></StampDown>
+      </div>
+    </div>
+  )
+  return (
+    <Fig s={DONE_FRAME} need={[pic, figArt('226:945')]} binds={{
+      '226:570': { wrap: el => <Hop delay={1.15}>{el}</Hop> }, '226:576': { wrap: el => <PopIn delay={0.3}>{el}</PopIn> }, '226:580': { text: `#${r.id}` },
+      '226:575': { text: 'Work done.' },
+      'done:art': { render: () => art, style: { overflow: 'visible' } },
+      'done:who': { text: `Fixed by ${firstName(r.tech)} · ${roomCode(s)}` },
+      '226:592': { text: 'Rate the visit', onClick: () => nav.replace('rate', { p: { id: r.id } }) },
+      '226:591': { onClick: () => { store.set({ draft: emptyDraft(), current: undefined }); nav.reset('home', { p: { pick: true } }) } },
     }} />
   )
 }
@@ -724,7 +765,7 @@ export function ErrorScreen({ kind }: { kind: 'offline' | 'e500' | 'expired' | '
 }
 
 export const ALL: Record<Screen, () => React.ReactElement> = {
-  welcome: Welcome, signin: SignIn, verify: Verify, isyou: IsYou, where: Where, hours: Hours, allow: Allow, homeEmpty: HomeEmpty, home: Home,
+  welcome: Welcome, signin: SignIn, verify: Verify, done: Done, isyou: IsYou, where: Where, hours: Hours, allow: Allow, homeEmpty: HomeEmpty, home: Home,
   doing: Doing, safety: Safety, place: Place, slot: Slot, review: Review, sent: Sent, dupe: Dupe, detail: Detail, near: Near, code: Code, wrong: Wrong,
   rate: Rate, closed: Closed, part: Part, missed: Missed, whatswrong: WhatsWrong, alerts: Alerts, profile: Profile,
   offline: () => <ErrorScreen kind="offline" />, e500: () => <ErrorScreen kind="e500" />, expired: () => <ErrorScreen kind="expired" />, e404: () => <ErrorScreen kind="e404" />,
